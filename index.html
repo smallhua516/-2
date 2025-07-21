@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地胶拼接可视化工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#3b82f6',
+                        accent: '#f97316',
+                        neutral: '#f3f4f6',
+                        dark: '#1f2937'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .shadow-soft {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary;
+            }
+            .btn-hover {
+                @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter text-dark min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- 顶部标题 -->
+        <header class="mb-6">
+            <h1 class="text-[clamp(1.75rem,3vw,2.5rem)] font-bold text-dark mb-2 flex items-center">
+                <i class="fa fa-th-large mr-3 text-primary"></i>地胶拼接可视化工具
+            </h1>
+            <p class="text-gray-600">精确规划您的场地地胶布局，支持自定义尺寸和排列方式</p>
+        </header>
+
+        <!-- 主要内容区 -->
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- 左侧输入控制区 -->
+            <div class="lg:w-1/3 space-y-6">
+                <!-- 场地设置卡片 -->
+                <div class="bg-white rounded-xl shadow-soft p-6 border border-gray-100 transition-all-300 hover:shadow-md">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-primary">
+                        <i class="fa fa-arrows-alt mr-2"></i>场地设置
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="field-length" class="block text-sm font-medium text-gray-700 mb-1">
+                                场地长度 (米)
+                            </label>
+                            <input type="number" id="field-length" min="0.1" step="0.1" 
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg input-focus transition-all-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label for="field-width" class="block text-sm font-medium text-gray-700 mb-1">
+                                场地宽度 (米)
+                            </label>
+                            <input type="number" id="field-width" min="0.1" step="0.1" 
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg input-focus transition-all-300 shadow-sm">
+                        </div>
+                        <!-- 标准地胶宽度选择 -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">标准地胶宽度 (米)</label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="standard-mat-width" value="1.8" checked class="mr-2 h-4 w-4 text-primary focus:ring-primary">
+                                    <span>1.8米</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="standard-mat-width" value="2.0" class="mr-2 h-4 w-4 text-primary focus:ring-primary">
+                                    <span>2.0米</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="generate-btn" 
+                                class="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
+                                <i class="fa fa-magic mr-2"></i>生成地胶
+                            </button>
+                            <button id="reset-btn" disabled 
+                                class="bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
+                                <i class="fa fa-refresh mr-2"></i>重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 地胶配置卡片 -->
+                <div class="bg-white rounded-xl shadow-soft p-6 border border-gray-100 transition-all-300 hover:shadow-md">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-primary">
+                        <i class="fa fa-puzzle-piece mr-2"></i>地胶配置
+                    </h2>
+                    
+                    <!-- 添加自定义地胶 -->
+                    <div class="space-y-4 mb-6">
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <h3 class="font-semibold mb-3 flex items-center text-accent">
+                                <i class="fa fa-plus-circle mr-2"></i>添加自定义地胶
+                            </h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">宽度 (米)</label>
+                                    <input type="number" class="custom-mat-width w-full px-4 py-2.5 border border-gray-300 rounded-lg input-focus transition-all-300 shadow-sm" min="0.1" step="0.1">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">长度 (米)</label>
+                                    <input type="number" class="custom-mat-length w-full px-4 py-2.5 border border-gray-300 rounded-lg input-focus transition-all-300 shadow-sm" min="0.1" step="0.1">
+                                </div>
+                                <button class="add-mat-btn w-full bg-accent hover:bg-accent/90 text-white font-medium py-2.5 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
+                                    <i class="fa fa-plus mr-2"></i>添加地胶
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 地胶文字大小调整 -->
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">地胶文字大小</label>
+                        <div class="flex items-center space-x-3">
+                            <button id="decrease-font-size" class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center btn-hover">
+                                <i class="fa fa-minus text-gray-700"></i>
+                            </button>
+                            <span id="font-size-value" class="text-gray-700 font-medium">16px</span>
+                            <button id="increase-font-size" class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center btn-hover">
+                                <i class="fa fa-plus text-gray-700"></i>
+                            </button>
+                            <input type="range" id="font-size-slider" min="8" max="100" value="16" step="1" 
+                                class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mt-4">
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <span class="w-28 text-gray-600">场地尺寸：</span>
+                            <span id="field-dimensions" class="font-medium text-dark">未设置</span>
+                        </div>
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <span class="w-28 text-gray-600">地胶配置：</span>
+                            <span id="mat-config" class="font-medium text-dark">未生成</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧画布显示区 -->
+            <div class="lg:w-2/3 space-y-6">
+                <div class="bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden transition-all-300 hover:shadow-md">
+                    <div class="p-3 border-b border-gray-100 flex justify-between items-center">
+                        <h2 class="text-xl font-bold flex items-center text-primary">
+                            <i class="fa fa-paint-brush mr-2"></i>地胶预览
+                        </h2>
+                        <button id="download-btn" disabled class="bg-secondary hover:bg-secondary/90 text-white font-medium py-2 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
+                            <i class="fa fa-download mr-2"></i>下载铺装图
+                        </button>
+                    </div>
+                    <div class="p-3 bg-gray-50 relative" id="canvas-container">
+                        <canvas id="canvas" class="w-full rounded-lg shadow-inner bg-white"></canvas>
+                        <!-- 画布为空时的提示信息 -->
+                        <div id="empty-canvas-message" class="absolute inset-0 flex items-center justify-center text-gray-400 text-lg">
+                            <div class="text-center">
+                                <i class="fa fa-th-large text-5xl mb-3 text-gray-300"></i>
+                                <p class="text-gray-500">请设置场地尺寸并生成地胶</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作提示卡片 -->
+                <div class="bg-white rounded-xl shadow-soft p-6 border border-gray-100 transition-all-300 hover:shadow-md">
+                    <h2 class="text-xl font-bold mb-4 flex items-center text-primary">
+                        <i class="fa fa-info-circle mr-2"></i>操作指南
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700">
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>所有地胶都可以自由拖动和旋转</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>右键点击地胶块可以旋转90度</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>地胶会自动吸附到场地边界</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>红色区域表示需要额外添加地胶的部分</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span><b>按住Shift键并点击地胶可删除</b></span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>可通过滑块或按钮调整地胶内文字大小</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 画布尺寸
+        let CANVAS_WIDTH = 1200;
+        let CANVAS_HEIGHT = 600;
+        
+        // 场地边距
+        const MARGIN = 20; 
+        
+        // 吸附阈值（像素）
+        const SNAP_THRESHOLD = 15;
+        
+        // 场地和地胶参数
+        let fieldLength = 0;
+        let fieldWidth = 0;
+        let scale = 40; // 初始缩放比例
+        
+        // 地胶文字大小
+        let matFontSize = 16;
+        
+        // 画布和绘图上下文
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 场地边界位置
+        let FIELD_X = MARGIN;
+        let FIELD_Y = MARGIN;
+        
+        // 地胶块数组
+        let mats = [];
+        
+        // 拖拽相关变量
+        let isDragging = false;
+        let draggedMatIndex = -1;
+        let offsetX, offsetY;
+        
+        // Shift键状态
+        let isShiftKeyDown = false;
+        
+        // 初始化事件监听
+        function initEvents() {
+            // 生成按钮事件
+            document.getElementById('generate-btn').addEventListener('click', generateMats);
+            
+            // 重置按钮事件
+            document.getElementById('reset-btn').addEventListener('click', reset);
+            
+            // 下载按钮事件
+            document.getElementById('download-btn').addEventListener('click', downloadResult);
+            
+            // 鼠标按下事件
+            canvas.addEventListener('mousedown', handleMouseDown);
+            
+            // 鼠标移动事件
+            canvas.addEventListener('mousemove', handleMouseMove);
+            
+            // 鼠标释放事件
+            canvas.addEventListener('mouseup', handleMouseUp);
+            
+            // 鼠标离开画布事件
+            canvas.addEventListener('mouseleave', handleMouseUp);
+            
+            // 右键菜单事件
+            canvas.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                if (draggedMatIndex >= 0) {
+                    rotateMat(draggedMatIndex);
+                }
+            });
+            
+            // 输入框变化事件
+            document.getElementById('field-length').addEventListener('input', updateFieldDimensions);
+            document.getElementById('field-width').addEventListener('input', updateFieldDimensions);
+            
+            // 添加自定义地胶按钮事件
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('add-mat-btn')) {
+                    addCustomMat();
+                }
+            });
+            
+            // 窗口大小变化事件
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 键盘事件 - 监听Shift键状态
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Shift') {
+                    isShiftKeyDown = true;
+                }
+            });
+            
+            document.addEventListener('keyup', function(e) {
+                if (e.key === 'Shift') {
+                    isShiftKeyDown = false;
+                }
+            });
+            
+            // 地胶文字大小调整事件
+            const fontSizeSlider = document.getElementById('font-size-slider');
+            const decreaseBtn = document.getElementById('decrease-font-size');
+            const increaseBtn = document.getElementById('increase-font-size');
+            const fontSizeValue = document.getElementById('font-size-value');
+            
+            fontSizeSlider.addEventListener('input', function() {
+                matFontSize = parseInt(this.value);
+                fontSizeValue.textContent = `${matFontSize}px`;
+                drawCanvas();
+            });
+            
+            decreaseBtn.addEventListener('click', function() {
+                if (matFontSize > 8) {
+                    matFontSize -= 1;
+                    fontSizeSlider.value = matFontSize;
+                    fontSizeValue.textContent = `${matFontSize}px`;
+                    drawCanvas();
+                }
+            });
+            
+            increaseBtn.addEventListener('click', function() {
+                matFontSize += 1;
+                fontSizeSlider.value = matFontSize;
+                fontSizeValue.textContent = `${matFontSize}px`;
+                drawCanvas();
+            });
+        }
+        
+        // 调整画布大小
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            CANVAS_WIDTH = container.clientWidth;
+            
+            // 根据场地尺寸计算画布高度
+            if (fieldLength > 0 && fieldWidth > 0) {
+                calculateScale();
+                CANVAS_HEIGHT = fieldWidth * scale + 2 * MARGIN + 100; // 额外增加100像素的空间
+            } else {
+                CANVAS_HEIGHT = 400; // 默认高度
+            }
+            
+            // 设置Canvas的实际尺寸
+            canvas.width = CANVAS_WIDTH;
+            canvas.height = CANVAS_HEIGHT;
+            
+            // 如果已有地胶，重新计算缩放比例并重绘
+            if (fieldLength > 0 && fieldWidth > 0) {
+                drawCanvas();
+            }
+        }
+        
+        // 更新场地尺寸显示
+        function updateFieldDimensions() {
+            const length = document.getElementById('field-length').value;
+            const width = document.getElementById('field-width').value;
+            
+            if (length && width) {
+                document.getElementById('field-dimensions').textContent = 
+                    `${parseFloat(length).toFixed(1)}米 × ${parseFloat(width).toFixed(1)}米`;
+            } else {
+                document.getElementById('field-dimensions').textContent = "未设置";
+            }
+        }
+        
+        // 计算合适的缩放比例
+        function calculateScale() {
+            const availableWidth = CANVAS_WIDTH - 2 * MARGIN;
+            
+            // 计算水平方向的缩放比例
+            scale = availableWidth / fieldLength;
+            
+            // 调整场地位置，使其垂直居中
+            FIELD_X = MARGIN;
+            FIELD_Y = (CANVAS_HEIGHT - fieldWidth * scale) / 2;
+        }
+        
+        // 获取当前选中的标准地胶宽度
+        function getStandardMatWidth() {
+            const selectedRadio = document.querySelector('input[name="standard-mat-width"]:checked');
+            return parseFloat(selectedRadio.value);
+        }
+        
+        // 添加自定义地胶
+        function addCustomMat() {
+            const widthInputs = document.querySelectorAll('.custom-mat-width');
+            const lengthInputs = document.querySelectorAll('.custom-mat-length');
+            
+            const customMats = [];
+            
+            widthInputs.forEach((widthInput, index) => {
+                const width = parseFloat(widthInput.value);
+                const length = parseFloat(lengthInputs[index].value);
+                
+                if (!isNaN(width) && !isNaN(length) && width > 0 && length > 0) {
+                    customMats.push({
+                        width: width,
+                        height: length
+                    });
+                }
+            });
+            
+            if (customMats.length === 0) {
+                document.getElementById('mat-config').classList.add('text-red-500');
+                document.getElementById('mat-config').textContent = "请输入有效的自定义地胶尺寸！";
+                
+                setTimeout(() => {
+                    document.getElementById('mat-config').classList.remove('text-red-500');
+                    updateMatConfig();
+                }, 3000);
+                
+                return;
+            }
+            
+            calculateScale();
+            
+            // 计算已有地胶占用的高度
+            let currentY = FIELD_Y;
+            if (mats.length > 0) {
+                const lastMat = mats[mats.length - 1];
+                currentY = lastMat.y + lastMat.width * scale + 5;
+            }
+            
+            customMats.forEach((mat, index) => {
+                const hue = 30 + (index * 40) % 240;
+                const color = `hsl(${hue}, 70%, 50%)`;
+                
+                mats.push({
+                    x: FIELD_X,
+                    y: currentY,
+                    width: mat.width,
+                    height: mat.height,
+                    color: color,
+                    rotation: 0,
+                    isStandard: false
+                });
+                
+                currentY += mat.width * scale + 5;
+            });
+            
+            // 调整画布高度以适应所有地胶
+            resizeCanvas();
+            
+            updateMatConfig();
+            document.getElementById('reset-btn').disabled = false;
+            document.getElementById('download-btn').disabled = false;
+            drawCanvas();
+        }
+        
+        // 更新地胶配置显示
+        function updateMatConfig() {
+            let totalWidth = 0;
+            mats.forEach(mat => {
+                totalWidth += mat.width;
+            });
+            
+            const coverage = ((totalWidth / fieldWidth) * 100).toFixed(1);
+            
+            document.getElementById('mat-config').textContent = 
+                `${mats.length}条地胶，总宽度 ${totalWidth.toFixed(2)}米 (覆盖场地 ${coverage}%)`;
+        }
+        
+        // 生成地胶
+        function generateMats() {
+            const lengthInput = document.getElementById('field-length').value;
+            const widthInput = document.getElementById('field-width').value;
+            
+            fieldLength = parseFloat(lengthInput);
+            fieldWidth = parseFloat(widthInput);
+            
+            if (isNaN(fieldLength) || isNaN(fieldWidth) || fieldLength <= 0 || fieldWidth <= 0) {
+                document.getElementById('mat-config').classList.add('text-red-500');
+                document.getElementById('mat-config').textContent = "请输入有效的正数尺寸！";
+                
+                setTimeout(() => {
+                    document.getElementById('mat-config').classList.remove('text-red-500');
+                    updateMatConfig();
+                }, 3000);
+                
+                return;
+            }
+            
+            resizeCanvas();
+            calculateScale();
+            mats = [];
+            
+            // 获取标准地胶宽度
+            const standardMatWidth = getStandardMatWidth();
+            
+            // 计算标准地胶数量和余数
+            const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
+            
+            // 创建标准地胶
+            for (let i = 0; i < standardMatCount; i++) {
+                const x = FIELD_X;
+                // 让地胶从顶部开始排列
+                const y = FIELD_Y + i * standardMatWidth * scale;
+                
+                const hue = 195 + (i * 30) % 120;
+                const color = `hsl(${hue}, 70%, 50%)`;
+                
+                mats.push({
+                    x: x,
+                    y: y,
+                    width: standardMatWidth,
+                    height: fieldLength,
+                    color: color,
+                    rotation: 0,
+                    isStandard: true
+                });
+            }
+            
+            updateMatConfig();
+            document.getElementById('reset-btn').disabled = false;
+            document.getElementById('download-btn').disabled = false;
+            document.getElementById('empty-canvas-message').style.display = 'none';
+            drawCanvas();
+        }
+        
+        // 重置
+        function reset() {
+            mats = [];
+            document.getElementById('field-length').value = '';
+            document.getElementById('field-width').value = '';
+            document.getElementById('field-dimensions').textContent = "未设置";
+            document.getElementById('mat-config').textContent = "未生成";
+            
+            document.querySelectorAll('.custom-mat-width').forEach(input => {
+                input.value = '';
+            });
+            document.querySelectorAll('.custom-mat-length').forEach(input => {
+                input.value = '';
+            });
+            
+            document.getElementById('empty-canvas-message').style.display = 'flex';
+            resizeCanvas();
+            drawCanvas();
+            document.getElementById('reset-btn').disabled = true;
+            document.getElementById('download-btn').disabled = true;
+        }
+        
+        // 下载结果
+        function downloadResult() {
+            const link = document.createElement('a');
+            link.download = '地胶铺装图.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // 删除选中的地胶
+        function deleteSelectedMat(index) {
+            if (index >= 0) {
+                mats.splice(index, 1);
+                updateMatConfig();
+                
+                // 如果没有地胶了，显示空画布消息
+                if (mats.length === 0) {
+                    document.getElementById('empty-canvas-message').style.display = 'flex';
+                    document.getElementById('reset-btn').disabled = true;
+                    document.getElementById('download-btn').disabled = true;
+                }
+                
+                // 调整画布高度
+                resizeCanvas();
+                drawCanvas();
+            }
+        }
+        
+        // 处理鼠标按下
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            for (let i = mats.length - 1; i >= 0; i--) {
+                const mat = mats[i];
+                
+                const cos = Math.cos(mat.rotation);
+                const sin = Math.sin(mat.rotation);
+                
+                const centerX = mat.x + mat.height * scale / 2;
+                const centerY = mat.y + mat.width * scale / 2;
+                const relX = mouseX - centerX;
+                const relY = mouseY - centerY;
+                
+                const rotatedX = relX * cos + relY * sin;
+                const rotatedY = -relX * sin + relY * cos;
+                
+                if (Math.abs(rotatedX) <= mat.height * scale / 2 && 
+                    Math.abs(rotatedY) <= mat.width * scale / 2) {
+                    
+                    if (isShiftKeyDown) {
+                        // 如果按下Shift键，删除选中的地胶
+                        deleteSelectedMat(i);
+                    } else {
+                        // 否则选中地胶进行拖动
+                        const selectedMat = mats.splice(i, 1)[0];
+                        mats.push(selectedMat);
+                        
+                        isDragging = true;
+                        draggedMatIndex = mats.length - 1;
+                        offsetX = mouseX - selectedMat.x;
+                        offsetY = mouseY - selectedMat.y;
+                    }
+                    
+                    drawCanvas();
+                    return;
+                }
+            }
+        }
+        
+        // 处理鼠标移动
+        function handleMouseMove(e) {
+            if (!isDragging) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            let newX = mouseX - offsetX;
+            let newY = mouseY - offsetY;
+            
+            const draggedMat = mats[draggedMatIndex];
+            
+            newX = Math.max(FIELD_X, Math.min(newX, FIELD_X + fieldLength * scale - draggedMat.height * scale));
+            newY = Math.max(FIELD_Y, Math.min(newY, FIELD_Y + fieldWidth * scale - draggedMat.width * scale));
+            
+            if (Math.abs(newX - FIELD_X) < SNAP_THRESHOLD) newX = FIELD_X;
+            if (Math.abs(newX - (FIELD_X + fieldLength * scale - draggedMat.height * scale)) < SNAP_THRESHOLD) 
+                newX = FIELD_X + fieldLength * scale - draggedMat.height * scale;
+            if (Math.abs(newY - FIELD_Y) < SNAP_THRESHOLD) newY = FIELD_Y;
+            if (Math.abs(newY - (FIELD_Y + fieldWidth * scale - draggedMat.width * scale)) < SNAP_THRESHOLD) 
+                newY = FIELD_Y + fieldWidth * scale - draggedMat.width * scale;
+            
+            draggedMat.x = newX;
+            draggedMat.y = newY;
+            
+            drawCanvas();
+        }
+        
+        // 处理鼠标释放
+        function handleMouseUp() {
+            isDragging = false;
+            draggedMatIndex = -1;
+        }
+        
+        // 旋转地胶块
+        function rotateMat(index) {
+            mats[index].rotation += Math.PI / 2;
+            drawCanvas();
+        }
+        
+        // 绘制画布
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (fieldLength <= 0 || fieldWidth <= 0) return;
+            
+            // 绘制场地边界
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(FIELD_X, FIELD_Y, fieldLength * scale, fieldWidth * scale);
+            
+            // 绘制场地标注
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`场地：${fieldLength.toFixed(1)}米（长） × ${fieldWidth.toFixed(1)}米（宽）`, 
+                         FIELD_X + fieldLength * scale / 2, FIELD_Y - 20); // 调整位置，避免超出画布
+            
+            // 绘制地胶块
+            for (let i = 0; i < mats.length; i++) {
+                const mat = mats[i];
+                
+                ctx.save();
+                ctx.translate(mat.x + mat.height * scale / 2, mat.y + mat.width * scale / 2);
+                ctx.rotate(mat.rotation);
+                
+                ctx.fillStyle = mat.color;
+                ctx.fillRect(-mat.height * scale / 2, -mat.width * scale / 2, mat.height * scale, mat.width * scale);
+                
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-mat.height * scale / 2, -mat.width * scale / 2, mat.height * scale, mat.width * scale);
+                
+                // 绘制尺寸标注 - 使用可调整的文字大小，强制显示在一行
+                ctx.font = `bold ${matFontSize}px Arial`;
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'center';
+                
+                // 根据地胶的旋转状态，动态调整显示的尺寸描述
+                const isHorizontal = Math.abs(Math.sin(mat.rotation)) < 0.1 || Math.abs(Math.cos(mat.rotation)) < 0.1;
+                const widthText = isHorizontal ? mat.width.toFixed(2) : mat.height.toFixed(2);
+                const heightText = isHorizontal ? mat.height.toFixed(2) : mat.width.toFixed(2);
+                const text = `${widthText}米*${heightText}米`;
+                
+                // 绘制文字，强制显示在一行
+                ctx.fillText(text, 0, 0);
+                
+                ctx.restore();
+            }
+            
+            // 绘制余数区域
+            const standardMatWidth = getStandardMatWidth();
+            const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
+            const remainderWidth = fieldWidth - standardMatCount * standardMatWidth;
+            
+            if (remainderWidth > 0) {
+                const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
+                
+                ctx.fillStyle = 'rgba(255, 99, 71, 0.1)';
+                ctx.fillRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
+                
+                ctx.strokeStyle = 'rgba(255, 99, 71, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
+                
+                ctx.fillStyle = 'rgba(255, 99, 71, 0.7)';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`余数区域: ${remainderWidth.toFixed(2)}米`, 
+                             FIELD_X + fieldLength * scale / 2, 
+                             remainderY + remainderWidth * scale / 2);
+            }
+        }
+        
+        // 初始化
+        function init() {
+            resizeCanvas();
+            initEvents();
+            drawCanvas();
+        }
+        
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>    
