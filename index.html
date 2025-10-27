@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地胶拼接可视化工具</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 添加版本号参数，每次更新代码时修改版本号 -->
+    <script src="https://cdn.tailwindcss.com?v=20240521"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css?v=20240521" rel="stylesheet">
+    
+    <!-- 添加缓存控制 meta 标签 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <script>
         tailwind.config = {
             theme: {
@@ -44,7 +51,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 font-inter text-dark min-h-screen">
+<body class="bg-gray-50 font-inter text-dark min-h-screen" data-app-version="20240521">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <!-- 顶部标题和Logo -->
         <header class="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -774,6 +781,16 @@
             resizeCanvas();
             initEvents();
             drawCanvas();
+            
+            // 版本检查，确保用户获取最新版本
+            const currentVersion = document.body.getAttribute('data-app-version');
+            const storedVersion = localStorage.getItem('appVersion');
+            
+            if (storedVersion !== currentVersion) {
+                localStorage.setItem('appVersion', currentVersion);
+                // 强制刷新一次以确保所有资源都是最新的
+                location.reload(true);
+            }
         }
         
         window.addEventListener('load', init);
