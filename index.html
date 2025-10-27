@@ -46,12 +46,20 @@
 </head>
 <body class="bg-gray-50 font-inter text-dark min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- 顶部标题 -->
-        <header class="mb-6">
-            <h1 class="text-[clamp(1.75rem,3vw,2.5rem)] font-bold text-dark mb-2 flex items-center">
-                <i class="fa fa-th-large mr-3 text-primary"></i>地胶拼接可视化工具
-            </h1>
-            <p class="text-gray-600">精确规划您的场地地胶布局，支持自定义尺寸和排列方式</p>
+        <!-- 顶部标题和Logo -->
+        <header class="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <!-- 左侧logo -->
+            <div class="flex-shrink-0">
+                <img src="http://photogzmaz.photo.store.qq.com/psc?/V531oAyj3t5NME46rgXi1xPS8w2klhJc/TmEUgtj9EK6.7V8ajmQrEBYVraCZ7jN5UJysmh.gDFdEMY9whzftb2GMuE5d0UhwqWu3ka19BEEWC3mKoZu.00USJf8Br.K.GKWr*Wc*rfg!/b&bo=EQuAAqsbQAYDB0w!&rf=viewer_4" 
+                     alt="欧百娜logo" 
+                     class="h-16 sm:h-20 object-contain mt-[-10px]">
+            </div>
+            
+            <!-- 右侧标题和说明文字 -->
+            <div class="flex flex-col">
+                <h1 class="text-[clamp(1.75rem,3vw,2.5rem)] font-bold text-dark">地胶拼接可视化工具</h1>
+                <p class="text-gray-600 mt-1">精确规划您的场地地胶布局，支持自定义尺寸和排列方式</p>
+            </div>
         </header>
 
         <!-- 主要内容区 -->
@@ -65,23 +73,31 @@
                     </h2>
                     <div class="space-y-4">
                         <div>
-                            <label for="field-length" class="block text-sm font-medium text-gray-700 mb-1">
-                                场地长度 (米)
-                            </label>
-                            <input type="number" id="field-length" min="0.1" step="0.1" 
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg input-focus transition-all-300 shadow-sm">
-                        </div>
-                        <div>
                             <label for="field-width" class="block text-sm font-medium text-gray-700 mb-1">
                                 场地宽度 (米)
                             </label>
                             <input type="number" id="field-width" min="0.1" step="0.1" 
                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg input-focus transition-all-300 shadow-sm">
                         </div>
+                        <div>
+                            <label for="field-length" class="block text-sm font-medium text-gray-700 mb-1">
+                                场地长度 (米)
+                            </label>
+                            <input type="number" id="field-length" min="0.1" step="0.1" 
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg input-focus transition-all-300 shadow-sm">
+                        </div>
                         <!-- 标准地胶宽度选择 -->
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">标准地胶宽度 (米)</label>
-                            <div class="flex space-x-4">
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="standard-mat-width" value="1.5" class="mr-2 h-4 w-4 text-primary focus:ring-primary">
+                                    <span>1.5米</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="standard-mat-width" value="1.6" class="mr-2 h-4 w-4 text-primary focus:ring-primary">
+                                    <span>1.6米</span>
+                                </label>
                                 <label class="flex items-center cursor-pointer">
                                     <input type="radio" name="standard-mat-width" value="1.8" checked class="mr-2 h-4 w-4 text-primary focus:ring-primary">
                                     <span>1.8米</span>
@@ -366,10 +382,16 @@
             const width = document.getElementById('field-width').value;
             
             if (length && width) {
-                document.getElementById('field-dimensions').textContent = 
-                    `${parseFloat(length).toFixed(1)}米 × ${parseFloat(width).toFixed(1)}米`;
+                const fieldDimensionsEl = document.getElementById('field-dimensions');
+                if (fieldDimensionsEl) {
+                    fieldDimensionsEl.textContent = 
+                        `${parseFloat(width).toFixed(1)}米 × ${parseFloat(length).toFixed(1)}米`;
+                }
             } else {
-                document.getElementById('field-dimensions').textContent = "未设置";
+                const fieldDimensionsEl = document.getElementById('field-dimensions');
+                if (fieldDimensionsEl) {
+                    fieldDimensionsEl.textContent = "未设置";
+                }
             }
         }
         
@@ -411,13 +433,16 @@
             });
             
             if (customMats.length === 0) {
-                document.getElementById('mat-config').classList.add('text-red-500');
-                document.getElementById('mat-config').textContent = "请输入有效的自定义地胶尺寸！";
-                
-                setTimeout(() => {
-                    document.getElementById('mat-config').classList.remove('text-red-500');
-                    updateMatConfig();
-                }, 3000);
+                const matConfigEl = document.getElementById('mat-config');
+                if (matConfigEl) {
+                    matConfigEl.classList.add('text-red-500');
+                    matConfigEl.textContent = "请输入有效的自定义地胶尺寸！";
+                    
+                    setTimeout(() => {
+                        matConfigEl.classList.remove('text-red-500');
+                        updateMatConfig();
+                    }, 3000);
+                }
                 
                 return;
             }
@@ -466,7 +491,6 @@
             
             const coverage = ((totalWidth / fieldWidth) * 100).toFixed(1);
             
-            // 虽然页面上移除了这个元素，但保留函数逻辑以防其他地方调用
             const matConfigEl = document.getElementById('mat-config');
             if (matConfigEl) {
                 matConfigEl.textContent = 
@@ -483,13 +507,16 @@
             fieldWidth = parseFloat(widthInput);
             
             if (isNaN(fieldLength) || isNaN(fieldWidth) || fieldLength <= 0 || fieldWidth <= 0) {
-                document.getElementById('mat-config').classList.add('text-red-500');
-                document.getElementById('mat-config').textContent = "请输入有效的正数尺寸！";
-                
-                setTimeout(() => {
-                    document.getElementById('mat-config').classList.remove('text-red-500');
-                    updateMatConfig();
-                }, 3000);
+                const matConfigEl = document.getElementById('mat-config');
+                if (matConfigEl) {
+                    matConfigEl.classList.add('text-red-500');
+                    matConfigEl.textContent = "请输入有效的正数尺寸！";
+                    
+                    setTimeout(() => {
+                        matConfigEl.classList.remove('text-red-500');
+                        updateMatConfig();
+                    }, 3000);
+                }
                 
                 return;
             }
@@ -507,7 +534,6 @@
             // 创建标准地胶
             for (let i = 0; i < standardMatCount; i++) {
                 const x = FIELD_X;
-                // 让地胶从顶部开始排列
                 const y = FIELD_Y + i * standardMatWidth * scale;
                 
                 const hue = 195 + (i * 30) % 120;
@@ -536,9 +562,12 @@
             mats = [];
             document.getElementById('field-length').value = '';
             document.getElementById('field-width').value = '';
-            document.getElementById('field-dimensions').textContent = "未设置";
             
-            // 虽然页面上移除了这个元素，但保留函数逻辑以防其他地方调用
+            const fieldDimensionsEl = document.getElementById('field-dimensions');
+            if (fieldDimensionsEl) {
+                fieldDimensionsEl.textContent = "未设置";
+            }
+            
             const matConfigEl = document.getElementById('mat-config');
             if (matConfigEl) {
                 matConfigEl.textContent = "未生成";
@@ -572,14 +601,12 @@
                 mats.splice(index, 1);
                 updateMatConfig();
                 
-                // 如果没有地胶了，显示空画布消息
                 if (mats.length === 0) {
                     document.getElementById('empty-canvas-message').style.display = 'flex';
                     document.getElementById('reset-btn').disabled = true;
                     document.getElementById('download-btn').disabled = true;
                 }
                 
-                // 调整画布高度
                 resizeCanvas();
                 drawCanvas();
             }
@@ -609,10 +636,8 @@
                     Math.abs(rotatedY) <= mat.width * scale / 2) {
                     
                     if (isShiftKeyDown) {
-                        // 如果按下Shift键，删除选中的地胶
                         deleteSelectedMat(i);
                     } else {
-                        // 否则选中地胶进行拖动
                         const selectedMat = mats.splice(i, 1)[0];
                         mats.push(selectedMat);
                         
@@ -684,8 +709,9 @@
             ctx.fillStyle = '#333';
             ctx.font = 'bold 18px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(`场地：${fieldLength.toFixed(1)}米（长） × ${fieldWidth.toFixed(1)}米（宽）`, 
-                         FIELD_X + fieldLength * scale / 2, FIELD_Y - 20); // 调整位置，避免超出画布
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`场地：${fieldWidth.toFixed(1)}米（宽） × ${fieldLength.toFixed(1)}米（长）`, 
+                         FIELD_X + fieldLength * scale / 2, FIELD_Y - 20);
             
             // 绘制地胶块
             for (let i = 0; i < mats.length; i++) {
@@ -702,19 +728,17 @@
                 ctx.lineWidth = 2;
                 ctx.strokeRect(-mat.height * scale / 2, -mat.width * scale / 2, mat.height * scale, mat.width * scale);
                 
-                // 绘制尺寸标注 - 使用可调整的文字大小，强制显示在一行
+                // 绘制尺寸标注
                 ctx.font = `bold ${matFontSize}px Arial`;
                 ctx.fillStyle = '#333';
                 ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle'; // 设置文本垂直居中
+                ctx.textBaseline = 'middle';
                 
-                // 根据地胶的旋转状态，动态调整显示的尺寸描述
                 const isHorizontal = Math.abs(Math.sin(mat.rotation)) < 0.1 || Math.abs(Math.cos(mat.rotation)) < 0.1;
                 const widthText = isHorizontal ? mat.width.toFixed(2) : mat.height.toFixed(2);
                 const heightText = isHorizontal ? mat.height.toFixed(2) : mat.width.toFixed(2);
                 const text = `${widthText}米*${heightText}米`;
                 
-                // 绘制文字，强制显示在一行
                 ctx.fillText(text, 0, 0);
                 
                 ctx.restore();
@@ -738,7 +762,7 @@
                 ctx.fillStyle = 'rgba(255, 99, 71, 0.7)';
                 ctx.font = '14px Arial';
                 ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle'; // 设置文本垂直居中
+                ctx.textBaseline = 'middle';
                 ctx.fillText(`余数区域: ${remainderWidth.toFixed(2)}米`, 
                              FIELD_X + fieldLength * scale / 2, 
                              remainderY + remainderWidth * scale / 2);
@@ -755,4 +779,4 @@
         window.addEventListener('load', init);
     </script>
 </body>
-</html>    
+</html>
