@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.1">
-    <title>地胶拼接可视化工具</title>
-    <script src="https://cdn.tailwindcss.com?v=20240602"></script>
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css?v=20240602" rel="stylesheet">
+    <title>地胶拼接拼接可视化工具</title>
+    <script src="https://cdn.tailwindcss.com?v=20240607"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css?v=20240607" rel="stylesheet">
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -55,7 +55,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 font-inter text-dark min-h-screen" data-app-version="20241031">
+<body class="bg-gray-50 font-inter text-dark min-h-screen" data-app-version="20240608">
     <!-- 提示对话框 -->
     <div id="message-modal" class="modal-backdrop hidden" style="display: none;">
         <div class="modal-content">
@@ -72,7 +72,7 @@
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <!-- 顶部标题和Logo -->
         <header class="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <!-- 左侧logo - 更新图片地址 -->
+            <!-- 左侧logo -->
             <div class="flex-shrink-0">
                 <img src="https://youke1.picui.cn/s1/2025/10/27/68ff8d26e8acc.png" 
                      alt="欧百娜logo" 
@@ -145,7 +145,7 @@
                     </div>
                 </div>
 
-                <!-- 地胶配置卡片 - 调整间距，减少拥挤感 -->
+                <!-- 地胶配置卡片 - 调整间距 -->
                 <div class="bg-white rounded-xl shadow-soft p-5 border border-gray-100 transition-all-300 hover:shadow-md">
                     <h2 class="text-xl font-bold mb-4 flex items-center text-primary">
                         <i class="fa fa-puzzle-piece mr-2"></i>地胶配置
@@ -193,9 +193,16 @@
                         <h2 class="text-xl font-bold flex items-center text-primary">
                             <i class="fa fa-paint-brush mr-2"></i>地胶预览
                         </h2>
-                        <button id="download-btn" disabled class="bg-secondary hover:bg-secondary/90 text-white font-medium py-2 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
-                            <i class="fa fa-download mr-2"></i>下载铺装图
-                        </button>
+                        <div class="flex gap-2">
+                            <!-- 撤销按钮 -->
+                            <button id="undo-btn" disabled 
+                                class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
+                                <i class="fa fa-undo mr-2"></i>撤销
+                            </button>
+                            <button id="download-btn" disabled class="bg-secondary hover:bg-secondary/90 text-white font-medium py-2 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
+                                <i class="fa fa-download mr-2"></i>下载铺装图
+                            </button>
+                        </div>
                     </div>
                     <div class="p-3 bg-gray-50 relative" id="canvas-container">
                         <canvas id="canvas" class="w-full rounded-lg shadow-inner bg-white"></canvas>
@@ -227,7 +234,7 @@
                     </div>
                 </div>
 
-                <!-- 操作提示卡片 -->
+                <!-- 操作指南卡片 -->
                 <div class="bg-white rounded-xl shadow-soft p-5 border border-gray-100 transition-all-300 hover:shadow-md">
                     <h2 class="text-xl font-bold mb-3 flex items-center text-primary">
                         <i class="fa fa-info-circle mr-2"></i>操作指南
@@ -236,14 +243,6 @@
                         <div class="flex items-start">
                             <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
                             <span>所有地胶都可以自由拖动和旋转</span>
-                        </div>
-                        <div class="flex items-start">
-                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
-                            <span>右键点击地胶块可以旋转90度</span>
-                        </div>
-                        <div class="flex items-start">
-                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
-                            <span>地胶会自动吸附到场地边界</span>
                         </div>
                         <div class="flex items-start">
                             <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
@@ -272,9 +271,81 @@
             // 定义余数区域地胶颜色
             const REMAINDER_MAT_COLOR = '#D0823D'; // 余数区域和手动添加的地胶使用这个颜色
             
+            // 操作历史记录 - 用于撤销功能
+            const history = [];
+            const MAX_HISTORY = 50; // 大幅增加历史记录容量
+            
             // 解决浮点数精度问题的辅助函数
             function precisionFix(num, decimals = 2) {
                 return Number(num.toFixed(decimals));
+            }
+            
+            // 保存当前状态到历史记录
+            function saveState() {
+                // 创建当前状态的深拷贝
+                const state = {
+                    mats: JSON.parse(JSON.stringify(mats)),
+                    fieldLength: fieldLength,
+                    fieldWidth: fieldWidth,
+                    scale: scale,
+                    FIELD_X: FIELD_X,
+                    FIELD_Y: FIELD_Y
+                };
+                
+                // 添加到历史记录
+                history.push(state);
+                
+                // 限制历史记录数量
+                if (history.length > MAX_HISTORY) {
+                    history.shift(); // 移除最旧的记录
+                }
+                
+                // 更新撤销按钮状态
+                updateUndoButtonState();
+            }
+            
+            // 撤销上一步操作
+            function undo() {
+                if (history.length === 0) {
+                    showModal("没有可撤销的操作", true);
+                    return;
+                }
+                
+                // 恢复上一个状态
+                const prevState = history.pop();
+                mats = JSON.parse(JSON.stringify(prevState.mats));
+                fieldLength = prevState.fieldLength;
+                fieldWidth = prevState.fieldWidth;
+                scale = prevState.scale;
+                FIELD_X = prevState.FIELD_X;
+                FIELD_Y = prevState.FIELD_Y;
+                
+                // 更新UI
+                updateMatConfig();
+                updateSmartAddButtonState();
+                updateUndoButtonState();
+                resizeCanvas();
+                drawCanvas();
+                
+                // 更新按钮状态
+                document.getElementById('reset-btn').disabled = mats.length === 0;
+                document.getElementById('download-btn').disabled = mats.length === 0;
+                document.getElementById('empty-canvas-message').style.display = mats.length === 0 ? 'flex' : 'none';
+            }
+            
+            // 更新撤销按钮状态
+            function updateUndoButtonState() {
+                const undoBtn = document.getElementById('undo-btn');
+                undoBtn.disabled = history.length === 0;
+                
+                // 添加视觉反馈
+                if (history.length === 0) {
+                    undoBtn.classList.remove('bg-gray-300');
+                    undoBtn.classList.add('bg-gray-200');
+                } else {
+                    undoBtn.classList.remove('bg-gray-200');
+                    undoBtn.classList.add('bg-gray-300');
+                }
             }
             
             // 画布尺寸
@@ -310,6 +381,8 @@
             let isDragging = false;
             let draggedMatIndex = -1;
             let offsetX, offsetY;
+            let startMatState = null; // 记录拖拽开始时地胶的状态
+            let isStateSaved = false; // 标记是否已保存状态
             
             // Shift键状态
             let isShiftKeyDown = false;
@@ -321,17 +394,32 @@
             
             // 初始化事件监听
             function initEvents() {
+                // 撤销按钮事件
+                document.getElementById('undo-btn').addEventListener('click', undo);
+                
                 // 生成按钮事件
-                document.getElementById('generate-btn').addEventListener('click', generateMats);
+                document.getElementById('generate-btn').addEventListener('click', function() {
+                    // 生成前保存当前状态
+                    saveState();
+                    generateMats();
+                });
                 
                 // 重置按钮事件
-                document.getElementById('reset-btn').addEventListener('click', reset);
+                document.getElementById('reset-btn').addEventListener('click', function() {
+                    // 重置前保存当前状态
+                    saveState();
+                    reset();
+                });
                 
                 // 下载按钮事件
                 document.getElementById('download-btn').addEventListener('click', downloadResult);
                 
                 // 智能添加地胶按钮事件
-                document.getElementById('smart-add-btn').addEventListener('click', smartAddMats);
+                document.getElementById('smart-add-btn').addEventListener('click', function() {
+                    // 添加前保存当前状态
+                    saveState();
+                    smartAddMats();
+                });
                 
                 // 对话框确定按钮事件
                 modalOk.addEventListener('click', hideModal);
@@ -366,6 +454,8 @@
                 canvas.addEventListener('contextmenu', function(e) {
                     e.preventDefault();
                     if (draggedMatIndex >= 0) {
+                        // 旋转前保存当前状态
+                        saveState();
                         rotateMat(draggedMatIndex);
                     }
                 });
@@ -384,6 +474,8 @@
                 // 添加自定义地胶按钮事件
                 document.addEventListener('click', function(e) {
                     if (e.target.classList.contains('add-mat-btn')) {
+                        // 添加前保存当前状态
+                        saveState();
                         addCustomMat();
                     }
                 });
@@ -411,6 +503,8 @@
                 const fontSizeValue = document.getElementById('font-size-value');
                 
                 fontSizeSlider.addEventListener('input', function() {
+                    // 调整前保存当前状态
+                    saveState();
                     matFontSize = parseInt(this.value);
                     fontSizeValue.textContent = `${matFontSize}px`;
                     drawCanvas();
@@ -418,6 +512,8 @@
                 
                 decreaseBtn.addEventListener('click', function() {
                     if (matFontSize > 8) {
+                        // 调整前保存当前状态
+                        saveState();
                         matFontSize -= 1;
                         fontSizeSlider.value = matFontSize;
                         fontSizeValue.textContent = `${matFontSize}px`;
@@ -426,6 +522,8 @@
                 });
                 
                 increaseBtn.addEventListener('click', function() {
+                    // 调整前保存当前状态
+                    saveState();
                     matFontSize += 1;
                     fontSizeSlider.value = matFontSize;
                     fontSizeValue.textContent = `${matFontSize}px`;
@@ -904,6 +1002,9 @@
             // 删除选中的地胶
             function deleteSelectedMat(index) {
                 if (index >= 0) {
+                    // 删除前保存当前状态
+                    saveState();
+                    
                     mats.splice(index, 1);
                     updateMatConfig();
                     
@@ -921,7 +1022,7 @@
                 }
             }
             
-            // 处理鼠标按下
+            // 处理鼠标按下事件 - 用于拖拽
             function handleMouseDown(e) {
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
@@ -947,6 +1048,10 @@
                         if (isShiftKeyDown) {
                             deleteSelectedMat(i);
                         } else {
+                            // 保存当前地胶的状态，用于拖拽结束时判断是否需要记录历史
+                            startMatState = JSON.parse(JSON.stringify(mat));
+                            isStateSaved = false; // 重置状态保存标记
+                            
                             const selectedMat = mats.splice(i, 1)[0];
                             mats.push(selectedMat);
                             
@@ -962,7 +1067,7 @@
                 }
             }
             
-            // 处理鼠标移动
+            // 处理鼠标移动事件 - 用于拖拽
             function handleMouseMove(e) {
                 if (!isDragging) return;
                 
@@ -985,16 +1090,28 @@
                 if (Math.abs(newY - (FIELD_Y + fieldWidth * scale - draggedMat.width * scale)) < SNAP_THRESHOLD) 
                     newY = FIELD_Y + fieldWidth * scale - draggedMat.width * scale;
                 
+                // 检查地胶是否有移动
+                const hasMoved = Math.abs(draggedMat.x - newX) > 0.1 || Math.abs(draggedMat.y - newY) > 0.1;
+                
+                // 首次移动时保存状态
+                if (hasMoved && !isStateSaved) {
+                    saveState();
+                    isStateSaved = true;
+                }
+                
                 draggedMat.x = newX;
                 draggedMat.y = newY;
                 
                 drawCanvas();
             }
             
-            // 处理鼠标释放
+            // 处理鼠标释放事件 - 用于拖拽结束
             function handleMouseUp() {
+                // 重置拖拽状态
                 isDragging = false;
                 draggedMatIndex = -1;
+                startMatState = null;
+                isStateSaved = false;
             }
             
             // 旋转地胶块
@@ -1022,7 +1139,35 @@
                 ctx.fillText(`场地：${fieldWidth.toFixed(1)}米（宽） × ${fieldLength.toFixed(1)}米（长）`, 
                              FIELD_X + fieldLength * scale / 2, FIELD_Y - 20);
                 
-                // 绘制地胶块
+                // 检查是否有智能生成的地胶（余数区域地胶）
+                const hasSmartMats = mats.some(mat => mat.isSmart);
+                
+                // 绘制余数区域背景（如果没有智能地胶覆盖）
+                const standardMatWidth = getStandardMatWidth();
+                const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
+                const remainderWidth = precisionFix(fieldWidth - standardMatCount * standardMatWidth);
+                
+                if (remainderWidth > 0 && !hasSmartMats) {
+                    const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
+                    
+                    ctx.fillStyle = 'rgba(255, 99, 71, 0.1)';
+                    ctx.fillRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
+                    
+                    ctx.strokeStyle = 'rgba(255, 99, 71, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
+                    
+                    // 只在没有智能地胶时绘制余数区域文字
+                    ctx.fillStyle = 'rgba(255, 99, 71, 0.7)';
+                    ctx.font = '14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`余数区域: ${remainderWidth.toFixed(2)}米`, 
+                                 FIELD_X + fieldLength * scale / 2, 
+                                 remainderY + remainderWidth * scale / 2);
+                }
+                
+                // 绘制地胶块（在余数区域之上绘制）
                 for (let i = 0; i < mats.length; i++) {
                     const mat = mats[i];
                     
@@ -1052,30 +1197,6 @@
                     
                     ctx.restore();
                 }
-                
-                // 绘制余数区域
-                const standardMatWidth = getStandardMatWidth();
-                const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
-                const remainderWidth = precisionFix(fieldWidth - standardMatCount * standardMatWidth);
-                
-                if (remainderWidth > 0) {
-                    const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
-                    
-                    ctx.fillStyle = 'rgba(255, 99, 71, 0.1)';
-                    ctx.fillRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
-                    
-                    ctx.strokeStyle = 'rgba(255, 99, 71, 0.5)';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
-                    
-                    ctx.fillStyle = 'rgba(255, 99, 71, 0.7)';
-                    ctx.font = '14px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(`余数区域: ${remainderWidth.toFixed(2)}米`, 
-                                 FIELD_X + fieldLength * scale / 2, 
-                                 remainderY + remainderWidth * scale / 2);
-                }
             }
             
             // 初始化
@@ -1084,6 +1205,7 @@
                 initEvents();
                 drawCanvas();
                 updateSmartAddButtonState(); // 初始化智能添加按钮状态
+                updateUndoButtonState(); // 初始化撤销按钮状态
             }
             
             // 启动初始化
