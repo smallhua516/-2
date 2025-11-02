@@ -2,9 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地胶拼接可视化工具</title>
-    <script src="https://cdn.tailwindcss.com?v=20240608"></script>
+    <script src="https://cdn.tailwindcss.com?v=20240609"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css?v=20240607" rel="stylesheet">
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -56,7 +56,7 @@
                 @apply bg-green-600 hover:bg-green-700 transition-all duration-300;
             }
             .update-modal {
-                @apply z-50 fixed inset-0 bg-black/30 flex items-center justify-center p-4; /* 降低背景透明度从70%到30% */
+                @apply z-50 fixed inset-0 bg-black/30 flex items-center justify-center p-4;
             }
             .update-content {
                 @apply bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[70vh] overflow-y-auto;
@@ -74,7 +74,7 @@
     </style>
 </head>
 <body class="bg-gray-50 font-inter text-dark min-h-screen" data-app-version="20241101">
-    <!-- 更新公告弹窗 -->
+    <!-- 更新公告弹窗 - 恢复为原始版本 -->
     <div id="update-modal" class="update-modal hidden">
         <div class="update-content">
             <div class="update-header">
@@ -352,7 +352,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('页面加载完成，初始化弹窗逻辑');
             
-            // 检查是否已显示过更新公告
+            // 检查是否已显示过更新公告（使用原始版本的localStorage键）
             const hasShownUpdate = localStorage.getItem('hasShownUpdate_20241101');
             const updateModal = document.getElementById('update-modal');
             
@@ -363,7 +363,7 @@
                 // 强制设置为显示状态，防止样式问题
                 updateModal.style.display = 'flex';
                 
-                // 标记为已显示
+                // 标记为已显示（使用原始版本的localStorage键）
                 localStorage.setItem('hasShownUpdate_20241101', 'true');
             }
             
@@ -886,7 +886,7 @@
                 drawCanvas();
             }
             
-            // 智能添加地胶
+            // 智能添加地胶 - 完整恢复所有余数区间处理逻辑
             function smartAddMats() {
                 // 检查是否为1.8米宽幅
                 const standardMatWidth = getStandardMatWidth();
@@ -917,24 +917,6 @@
                 let remainderWidth = fieldWidth - standardMatCount * standardMatWidth;
                 remainderWidth = precisionFix(remainderWidth); // 关键修复：精确到两位小数
                 
-                // 检查余数是否在可用范围内
-                if (remainderWidth < 0.4 || remainderWidth > 0.9) {
-                    // 修改提示信息显示方式
-                    const messageEl = document.getElementById('smart-add-message');
-                    const originalText = messageEl.textContent;
-                    messageEl.textContent = `智能填充不可用（余数 ${remainderWidth.toFixed(2)}米不在0.4-0.9米范围内）`;
-                    messageEl.classList.remove('text-orange-500');
-                    messageEl.classList.add('text-red-500');
-                    
-                    // 3秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-red-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 3000);
-                    return;
-                }
-                
                 // 修改提示信息显示方式，不隐藏原有提示
                 const messageEl = document.getElementById('smart-add-message');
                 const originalText = messageEl.textContent;
@@ -942,16 +924,22 @@
                 messageEl.classList.remove('text-orange-500');
                 messageEl.classList.add('text-blue-500');
                 
-                // 5秒后恢复原始提示
-                setTimeout(() => {
-                    messageEl.textContent = originalText;
-                    messageEl.classList.remove('text-blue-500');
-                    messageEl.classList.add('text-orange-500');
-                }, 5000);
-                
                 // 严格按照规则判断余数范围
                 if (remainderWidth < 0.4) {
-                    showModal("这个你手动输入，不知道你要除几份");
+                    // 余数 < 0.4米时：显示提示，不自动填充
+                    showModal("这个你手动输入，不知道你要除几份", true);
+                    
+                    // 显示提示信息
+                    messageEl.textContent = "这个你手动输入，不知道你要除几份";
+                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
+                    messageEl.classList.add('text-red-500');
+                    
+                    // 5秒后恢复原始提示
+                    setTimeout(() => {
+                        messageEl.textContent = originalText;
+                        messageEl.classList.remove('text-red-500');
+                        messageEl.classList.add('text-orange-500');
+                    }, 5000);
                 } 
                 else if (remainderWidth === 0.4) {
                     // 余数等于0.4米时，生成4条：余数米宽 * 场地总长/4米长
@@ -1022,10 +1010,23 @@
                     }, 5000);
                 } 
                 else if (remainderWidth > 0.9 && remainderWidth <= 1.2) {
-                    showModal("这个你手动输入，我不会除三乘二");
+                    // 0.9米 < 余数 ≤ 1.2米时：显示提示，不自动填充
+                    showModal("这个你手动输入，我不会除三乘二", true);
+                    
+                    // 显示提示信息
+                    messageEl.textContent = "这个你手动输入，我不会除三乘二";
+                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
+                    messageEl.classList.add('text-red-500');
+                    
+                    // 5秒后恢复原始提示
+                    setTimeout(() => {
+                        messageEl.textContent = originalText;
+                        messageEl.classList.remove('text-red-500');
+                        messageEl.classList.add('text-orange-500');
+                    }, 5000);
                 } 
                 else {
-                    // 余数 > 1.2米时，生成1条：余数米宽 * 场地总长米长
+                    // 余数 > 1.2米时：生成1条「余数米宽 × 场地总长度米长」的地胶
                     addSmartMats(1, remainderWidth, fieldLength);
                     
                     // 显示成功信息
