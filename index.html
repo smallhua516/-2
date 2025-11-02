@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.1">
-    <title>地胶拼接拼接可视化工具</title>
-    <script src="https://cdn.tailwindcss.com?v=20240607"></script>
+    <title>地胶拼接可视化工具</title>
+    <script src="https://cdn.tailwindcss.com?v=20240608"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css?v=20240607" rel="stylesheet">
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -50,20 +50,97 @@
                 @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
             }
             .modal-content {
-                @apply bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-lg;
+                @apply bg-white rounded-lg p-5 max-w-sm w-full mx-4 shadow-lg;
+            }
+            .btn-copied {
+                @apply bg-green-600 hover:bg-green-700 transition-all duration-300;
+            }
+            .update-modal {
+                @apply z-50 fixed inset-0 bg-black/30 flex items-center justify-center p-4; /* 降低背景透明度从70%到30% */
+            }
+            .update-content {
+                @apply bg-white rounded-xl shadow-xl max-w-sm w-full max-h-[70vh] overflow-y-auto;
+            }
+            .update-header {
+                @apply bg-primary text-white p-4 rounded-t-xl flex justify-between items-center;
+            }
+            .update-body {
+                @apply p-4 space-y-3 text-sm;
+            }
+            .update-footer {
+                @apply p-3 border-t border-gray-100 flex justify-end;
             }
         }
     </style>
 </head>
-<body class="bg-gray-50 font-inter text-dark min-h-screen" data-app-version="20240608">
+<body class="bg-gray-50 font-inter text-dark min-h-screen" data-app-version="20241101">
+    <!-- 更新公告弹窗 -->
+    <div id="update-modal" class="update-modal hidden">
+        <div class="update-content">
+            <div class="update-header">
+                <h2 class="text-base font-bold">✨ 功能更新公告 (11月1日)</h2>
+                <button id="close-update" class="text-white hover:text-gray-200 transition-colors p-1">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="update-body">
+                <div class="flex items-start p-2 bg-blue-50 rounded-lg">
+                    <div class="text-primary mt-1 mr-2">
+                        <i class="fa fa-magic"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">新增智能填充功能</h3>
+                        <p class="text-gray-600 text-xs mt-1">支持1.8米宽幅地胶的余数区域一键填充，自动计算最优分割方案。<br>
+                        <span class="text-orange-500 text-xs">注：当余数小于0.4米或大于0.9米时该功能不可用</span></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start p-2 bg-green-50 rounded-lg">
+                    <div class="text-green-600 mt-1 mr-2">
+                        <i class="fa fa-copy"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">优化分享体验</h3>
+                        <p class="text-gray-600 text-xs mt-1">右上角下载功能已替换为一键复制功能，拼装图可直接复制粘贴给客户，无需再截图保存。</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start p-2 bg-purple-50 rounded-lg">
+                    <div class="text-purple-600 mt-1 mr-2">
+                        <i class="fa fa-undo"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">新增撤销功能</h3>
+                        <p class="text-gray-600 text-xs mt-1">操作失误时可通过撤销按钮返回上一步，提高操作容错率。</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start p-2 bg-gray-50 rounded-lg">
+                    <div class="text-gray-600 mt-1 mr-2">
+                        <i class="fa fa-bug"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">修复显示问题</h3>
+                        <p class="text-gray-600 text-xs mt-1">解决了红色提示文字显示在地胶上层的问题，界面更加清晰整洁。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="update-footer">
+                <button id="confirm-update" class="bg-primary hover:bg-primary/90 text-white font-medium py-1 px-3 rounded-lg transition-all duration-300 text-sm">
+                    了解了
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 提示对话框 -->
     <div id="message-modal" class="modal-backdrop hidden" style="display: none;">
         <div class="modal-content">
-            <div class="text-center mb-4">
-                <i id="modal-icon" class="fa fa-info-circle text-4xl text-primary mb-3"></i>
-                <p id="modal-message" class="text-lg"></p>
+            <div class="text-center mb-3">
+                <i id="modal-icon" class="fa fa-info-circle text-3xl text-primary mb-2"></i>
+                <p id="modal-message" class="text-base"></p>
             </div>
-            <button id="modal-ok" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300">
+            <button id="modal-ok" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-1.5 px-3 rounded-lg transition-all duration-300 text-sm">
                 确定
             </button>
         </div>
@@ -199,8 +276,8 @@
                                 class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
                                 <i class="fa fa-undo mr-2"></i>撤销
                             </button>
-                            <button id="download-btn" disabled class="bg-secondary hover:bg-secondary/90 text-white font-medium py-2 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
-                                <i class="fa fa-download mr-2"></i>下载铺装图
+                            <button id="copy-btn" disabled class="bg-secondary hover:bg-secondary/90 text-white font-medium py-2.5 px-4 rounded-lg btn-hover flex items-center justify-center shadow-sm">
+                                <i class="fa fa-copy mr-2"></i>复制拼装图
                             </button>
                         </div>
                     </div>
@@ -256,6 +333,14 @@
                             <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
                             <span>可通过滑块或按钮调整地胶内文字大小</span>
                         </div>
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>点击"复制拼装图"按钮可一键复制图片</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>复制后可直接粘贴到其他应用中使用</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -265,6 +350,75 @@
     <script>
         // 确保弹窗初始状态为隐藏
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，初始化弹窗逻辑');
+            
+            // 检查是否已显示过更新公告
+            const hasShownUpdate = localStorage.getItem('hasShownUpdate_20241101');
+            const updateModal = document.getElementById('update-modal');
+            
+            // 如果未显示过，显示更新公告
+            if (!hasShownUpdate) {
+                console.log('首次加载，显示更新公告弹窗');
+                updateModal.classList.remove('hidden');
+                // 强制设置为显示状态，防止样式问题
+                updateModal.style.display = 'flex';
+                
+                // 标记为已显示
+                localStorage.setItem('hasShownUpdate_20241101', 'true');
+            }
+            
+            // 关闭更新公告的通用函数
+            function closeUpdateModal() {
+                console.log('执行关闭弹窗操作');
+                // 双重保险确保弹窗关闭
+                updateModal.classList.add('hidden');
+                updateModal.style.display = 'none';
+                
+                // 恢复背景滚动
+                document.body.style.overflow = '';
+                console.log('弹窗已关闭');
+            }
+            
+            // 关闭按钮关闭 - 添加事件委托确保能捕获到事件
+            document.addEventListener('click', function(e) {
+                if (e.target.id === 'close-update' || e.target.parentElement.id === 'close-update') {
+                    console.log('点击关闭按钮');
+                    closeUpdateModal();
+                }
+            });
+            
+            // 确认按钮关闭 - 添加事件委托
+            document.addEventListener('click', function(e) {
+                if (e.target.id === 'confirm-update') {
+                    console.log('点击确认按钮');
+                    closeUpdateModal();
+                }
+            });
+            
+            // 点击空白处关闭
+            updateModal.addEventListener('click', function(e) {
+                // 检查点击的是否是模态框背景而非内容
+                if (e.target === updateModal) {
+                    console.log('点击空白区域');
+                    closeUpdateModal();
+                }
+            });
+            
+            // ESC键关闭 - 全局监听
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    console.log('按下ESC键');
+                    // 检查弹窗是否可见
+                    if (!updateModal.classList.contains('hidden') || updateModal.style.display !== 'none') {
+                        closeUpdateModal();
+                    }
+                    if (messageModal.style.display !== 'none') {
+                        hideModal();
+                    }
+                }
+            });
+            
+            // 强制设置消息弹窗初始状态
             const messageModal = document.getElementById('message-modal');
             messageModal.style.display = 'none';
             
@@ -329,7 +483,7 @@
                 
                 // 更新按钮状态
                 document.getElementById('reset-btn').disabled = mats.length === 0;
-                document.getElementById('download-btn').disabled = mats.length === 0;
+                document.getElementById('copy-btn').disabled = mats.length === 0;
                 document.getElementById('empty-canvas-message').style.display = mats.length === 0 ? 'flex' : 'none';
             }
             
@@ -346,6 +500,50 @@
                     undoBtn.classList.remove('bg-gray-200');
                     undoBtn.classList.add('bg-gray-300');
                 }
+            }
+            
+            // 复制拼装图到剪贴板
+            function copyToClipboard() {
+                const copyBtn = document.getElementById('copy-btn');
+                const originalText = copyBtn.innerHTML;
+                
+                // 获取Canvas数据URL
+                canvas.toBlob(blob => {
+                    try {
+                        // 使用Clipboard API复制图片
+                        navigator.clipboard.write([
+                            new ClipboardItem({
+                                'image/png': blob
+                            })
+                        ]).then(() => {
+                            // 显示复制成功状态
+                            copyBtn.innerHTML = '<i class="fa fa-check mr-2"></i>已复制';
+                            copyBtn.classList.add('btn-copied');
+                            
+                            // 2秒后恢复原始状态
+                            setTimeout(() => {
+                                copyBtn.innerHTML = originalText;
+                                copyBtn.classList.remove('btn-copied');
+                            }, 2000);
+                            
+                            showModal("拼装图已成功复制到剪贴板，可直接粘贴使用");
+                        }).catch(err => {
+                            console.error('复制失败:', err);
+                            showModal("复制失败，请尝试刷新页面后重试", true);
+                        });
+                    } catch (err) {
+                        console.error('浏览器不支持剪贴板API:', err);
+                        // 降级方案：创建图片链接供手动复制
+                        const imgUrl = canvas.toDataURL('image/png');
+                        const tempLink = document.createElement('a');
+                        tempLink.href = imgUrl;
+                        tempLink.download = '地胶拼装图.png';
+                        document.body.appendChild(tempLink);
+                        tempLink.click();
+                        document.body.removeChild(tempLink);
+                        showModal("您的浏览器不支持直接复制图片，已为您下载图片文件", true);
+                    }
+                });
             }
             
             // 画布尺寸
@@ -411,8 +609,8 @@
                     reset();
                 });
                 
-                // 下载按钮事件
-                document.getElementById('download-btn').addEventListener('click', downloadResult);
+                // 复制按钮事件
+                document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
                 
                 // 智能添加地胶按钮事件
                 document.getElementById('smart-add-btn').addEventListener('click', function() {
@@ -427,13 +625,6 @@
                 // 点击对话框背景关闭
                 messageModal.addEventListener('click', function(e) {
                     if (e.target === messageModal) {
-                        hideModal();
-                    }
-                });
-                
-                // 键盘ESC关闭对话框
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape' && messageModal.style.display !== 'none') {
                         hideModal();
                     }
                 });
@@ -552,7 +743,7 @@
                 if (!message || message.trim() === '') return;
                 
                 modalMessage.textContent = message;
-                modalIcon.className = isWarning ? "fa fa-exclamation-triangle text-4xl text-orange-500 mb-3" : "fa fa-info-circle text-4xl text-primary mb-3";
+                modalIcon.className = isWarning ? "fa fa-exclamation-triangle text-3xl text-orange-500 mb-2" : "fa fa-info-circle text-3xl text-primary mb-2";
                 messageModal.style.display = 'flex';
                 // 阻止背景滚动
                 document.body.style.overflow = 'hidden';
@@ -690,7 +881,7 @@
                 
                 updateMatConfig();
                 document.getElementById('reset-btn').disabled = false;
-                document.getElementById('download-btn').disabled = false;
+                document.getElementById('copy-btn').disabled = false;
                 updateSmartAddButtonState();
                 drawCanvas();
             }
@@ -725,6 +916,24 @@
                 const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
                 let remainderWidth = fieldWidth - standardMatCount * standardMatWidth;
                 remainderWidth = precisionFix(remainderWidth); // 关键修复：精确到两位小数
+                
+                // 检查余数是否在可用范围内
+                if (remainderWidth < 0.4 || remainderWidth > 0.9) {
+                    // 修改提示信息显示方式
+                    const messageEl = document.getElementById('smart-add-message');
+                    const originalText = messageEl.textContent;
+                    messageEl.textContent = `智能填充不可用（余数 ${remainderWidth.toFixed(2)}米不在0.4-0.9米范围内）`;
+                    messageEl.classList.remove('text-orange-500');
+                    messageEl.classList.add('text-red-500');
+                    
+                    // 3秒后恢复原始提示
+                    setTimeout(() => {
+                        messageEl.textContent = originalText;
+                        messageEl.classList.remove('text-red-500');
+                        messageEl.classList.add('text-orange-500');
+                    }, 3000);
+                    return;
+                }
                 
                 // 修改提示信息显示方式，不隐藏原有提示
                 const messageEl = document.getElementById('smart-add-message');
@@ -870,7 +1079,7 @@
                 
                 updateMatConfig();
                 document.getElementById('reset-btn').disabled = false;
-                document.getElementById('download-btn').disabled = false;
+                document.getElementById('copy-btn').disabled = false;
                 drawCanvas();
             }
             
@@ -890,10 +1099,16 @@
                 }
             }
             
-            // 生成地胶
+            // 生成地胶 - 移除成功提示框
             function generateMats() {
                 const lengthInput = document.getElementById('field-length').value;
                 const widthInput = document.getElementById('field-width').value;
+                
+                // 验证输入
+                if (!lengthInput || !widthInput) {
+                    showModal("请输入场地的长度和宽度", true);
+                    return;
+                }
                 
                 fieldLength = parseFloat(lengthInput);
                 fieldWidth = parseFloat(widthInput);
@@ -915,9 +1130,12 @@
                     return;
                 }
                 
+                // 重置地胶数组
+                mats = [];
+                
+                // 重新计算画布尺寸和缩放比例
                 resizeCanvas();
                 calculateScale();
-                mats = [];
                 
                 // 获取标准地胶宽度
                 const standardMatWidth = getStandardMatWidth();
@@ -945,9 +1163,10 @@
                     });
                 }
                 
+                // 更新UI状态 - 移除成功提示框
                 updateMatConfig();
                 document.getElementById('reset-btn').disabled = false;
-                document.getElementById('download-btn').disabled = false;
+                document.getElementById('copy-btn').disabled = false;
                 updateSmartAddButtonState(); // 更新智能添加按钮状态
                 document.getElementById('empty-canvas-message').style.display = 'none';
                 drawCanvas();
@@ -988,15 +1207,7 @@
                 resizeCanvas();
                 drawCanvas();
                 document.getElementById('reset-btn').disabled = true;
-                document.getElementById('download-btn').disabled = true;
-            }
-            
-            // 下载结果
-            function downloadResult() {
-                const link = document.createElement('a');
-                link.download = '地胶铺装图.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+                document.getElementById('copy-btn').disabled = true;
             }
             
             // 删除选中的地胶
@@ -1011,7 +1222,7 @@
                     if (mats.length === 0) {
                         document.getElementById('empty-canvas-message').style.display = 'flex';
                         document.getElementById('reset-btn').disabled = true;
-                        document.getElementById('download-btn').disabled = true;
+                        document.getElementById('copy-btn').disabled = true;
                         document.getElementById('smart-add-btn').disabled = true;
                     } else {
                         updateSmartAddButtonState();
@@ -1120,9 +1331,11 @@
                 drawCanvas();
             }
             
-            // 绘制画布
+            // 绘制画布 - 确保背景为白色，修复文字显示层级
             function drawCanvas() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // 填充白色背景，解决透明问题
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
                 if (fieldLength <= 0 || fieldWidth <= 0) return;
                 
@@ -1156,15 +1369,6 @@
                     ctx.strokeStyle = 'rgba(255, 99, 71, 0.5)';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
-                    
-                    // 只在没有智能地胶时绘制余数区域文字
-                    ctx.fillStyle = 'rgba(255, 99, 71, 0.7)';
-                    ctx.font = '14px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(`余数区域: ${remainderWidth.toFixed(2)}米`, 
-                                 FIELD_X + fieldLength * scale / 2, 
-                                 remainderY + remainderWidth * scale / 2);
                 }
                 
                 // 绘制地胶块（在余数区域之上绘制）
@@ -1196,6 +1400,18 @@
                     ctx.fillText(text, 0, 0);
                     
                     ctx.restore();
+                }
+                
+                // 最后绘制余数区域文字，确保在地胶上方显示
+                if (remainderWidth > 0 && !hasSmartMats) {
+                    const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
+                    ctx.fillStyle = 'rgba(255, 99, 71, 0.7)';
+                    ctx.font = '14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`余数区域: ${remainderWidth.toFixed(2)}米`, 
+                                 FIELD_X + fieldLength * scale / 2, 
+                                 remainderY + remainderWidth * scale / 2);
                 }
             }
             
