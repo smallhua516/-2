@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地胶拼接可视化工具</title>
-    <script src="https://cdn.tailwindcss.com?v=20240609"></script>
+    <script src="https://cdn.tailwindcss.com?v=20240607"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css?v=20240607" rel="stylesheet">
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -70,64 +70,47 @@
             .update-footer {
                 @apply p-3 border-t border-gray-100 flex justify-end;
             }
+            /* 新增分段输入弹窗样式 */
+            .segment-modal {
+                @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
+            }
+            .segment-content {
+                @apply bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-lg;
+            }
+            .segment-input {
+                @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg input-focus transition-all-300 shadow-sm mt-2 mb-4;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-50 font-inter text-dark min-h-screen" data-app-version="20241101">
-    <!-- 更新公告弹窗 - 恢复为原始版本 -->
+    <!-- 更新公告弹窗 - 修改后版本 -->
     <div id="update-modal" class="update-modal hidden">
         <div class="update-content">
             <div class="update-header">
-                <h2 class="text-base font-bold">✨ 功能更新公告 (11月1日)</h2>
+                <h2 class="text-base font-bold">✨ 功能重磅升级</h2>
                 <button id="close-update" class="text-white hover:text-gray-200 transition-colors p-1">
                     <i class="fa fa-times"></i>
                 </button>
             </div>
             <div class="update-body">
-                <div class="flex items-start p-2 bg-blue-50 rounded-lg">
-                    <div class="text-primary mt-1 mr-2">
+                <div class="flex items-start p-3 bg-blue-50 rounded-lg">
+                    <div class="text-primary mt-1 mr-2 text-xl">
                         <i class="fa fa-magic"></i>
                     </div>
-                    <div>
-                        <h3 class="font-semibold text-gray-800">新增智能填充功能</h3>
-                        <p class="text-gray-600 text-xs mt-1">支持1.8米宽幅地胶的余数区域一键填充，自动计算最优分割方案。<br>
-                        <span class="text-orange-500 text-xs">注：当余数小于0.4米或0.9＜x≤1.2时不可用</span></p>
-                    </div>
-                </div>
-                
-                <div class="flex items-start p-2 bg-green-50 rounded-lg">
-                    <div class="text-green-600 mt-1 mr-2">
-                        <i class="fa fa-copy"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-semibold text-gray-800">优化分享体验</h3>
-                        <p class="text-gray-600 text-xs mt-1">右上角下载功能已替换为一键复制功能，拼装图可直接复制粘贴给客户，无需再截图保存。</p>
-                    </div>
-                </div>
-                
-                <div class="flex items-start p-2 bg-purple-50 rounded-lg">
-                    <div class="text-purple-600 mt-1 mr-2">
-                        <i class="fa fa-undo"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-semibold text-gray-800">新增撤销功能</h3>
-                        <p class="text-gray-600 text-xs mt-1">操作失误时可通过撤销按钮返回上一步，提高操作容错率。</p>
-                    </div>
-                </div>
-                
-                <div class="flex items-start p-2 bg-gray-50 rounded-lg">
-                    <div class="text-gray-600 mt-1 mr-2">
-                        <i class="fa fa-bug"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-semibold text-gray-800">修复显示问题</h3>
-                        <p class="text-gray-600 text-xs mt-1">解决了红色提示文字显示在地胶上层的问题，界面更加清晰整洁。</p>
+                    <div class="w-full">
+                        <h3 class="font-semibold text-gray-800 mb-2">1.8米宽幅地胶 全场景智能填充</h3>
+                        <p class="text-gray-600 leading-relaxed">
+                            已支持<span class="text-accent font-medium">小于0.4米、除三乘二</span>等所有余数场景，<br>
+                            任意余数均可<span class="text-primary font-medium">一键智能填充</span>，从此一劳永逸！<br>
+                            操作更便捷，效率再提升！
+                        </p>
                     </div>
                 </div>
             </div>
             <div class="update-footer">
                 <button id="confirm-update" class="bg-primary hover:bg-primary/90 text-white font-medium py-1 px-3 rounded-lg transition-all duration-300 text-sm">
-                    了解了
+                    立即体验
                 </button>
             </div>
         </div>
@@ -140,9 +123,31 @@
                 <i id="modal-icon" class="fa fa-info-circle text-3xl text-primary mb-2"></i>
                 <p id="modal-message" class="text-base"></p>
             </div>
-            <button id="modal-ok" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-1.5 px-3 rounded-lg transition-all duration-300 text-sm">
+            <button id="modal-ok" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-1.5 px-3 rounded-lg transition-all-300 text-sm">
                 确定
             </button>
+        </div>
+    </div>
+
+    <!-- 新增：余数<0.4米 自定义分段输入弹窗 -->
+    <div id="segment-modal" class="segment-modal hidden" style="display: none;">
+        <div class="segment-content">
+            <h3 class="text-lg font-bold text-primary flex items-center">
+                <i class="fa fa-split mr-2"></i>自定义分段填充
+            </h3>
+            <p class="text-gray-600 mt-2" id="segment-tip">
+                检测到余数宽度：<span id="segment-remainder" class="font-semibold text-accent"></span>米（小于0.4米）
+            </p>
+            <p class="text-gray-700">请输入要分成的段数（正整数）：</p>
+            <input type="number" id="segment-count" class="segment-input" min="1" step="1" placeholder="例如：4、5、6">
+            <div class="flex gap-3 mt-2">
+                <button id="segment-cancel" class="flex-1 bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg btn-hover">
+                    取消
+                </button>
+                <button id="segment-confirm" class="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg btn-hover">
+                    确认填充
+                </button>
+            </div>
         </div>
     </div>
 
@@ -151,7 +156,7 @@
         <header class="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <!-- 左侧logo -->
             <div class="flex-shrink-0">
-                <img src="https://youke1.picui.cn/s1/2025/10/27/68ff8d26e8acc.png" 
+                <img src="https://s41.ax1x.com/2026/01/03/pZUjfv6.png" 
                      alt="欧百娜logo" 
                      class="h-16 sm:h-20 object-contain mt-[-10px]">
             </div>
@@ -352,7 +357,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('页面加载完成，初始化弹窗逻辑');
             
-            // 检查是否已显示过更新公告（使用原始版本的localStorage键）
+            // 检查是否已显示过更新公告（原始版本localStorage键）
             const hasShownUpdate = localStorage.getItem('hasShownUpdate_20241101');
             const updateModal = document.getElementById('update-modal');
             
@@ -360,866 +365,534 @@
             if (!hasShownUpdate) {
                 console.log('首次加载，显示更新公告弹窗');
                 updateModal.classList.remove('hidden');
-                // 强制设置为显示状态，防止样式问题
                 updateModal.style.display = 'flex';
-                
-                // 标记为已显示（使用原始版本的localStorage键）
                 localStorage.setItem('hasShownUpdate_20241101', 'true');
             }
             
             // 关闭更新公告的通用函数
             function closeUpdateModal() {
-                console.log('执行关闭弹窗操作');
-                // 双重保险确保弹窗关闭
                 updateModal.classList.add('hidden');
                 updateModal.style.display = 'none';
-                
-                // 恢复背景滚动
                 document.body.style.overflow = '';
-                console.log('弹窗已关闭');
             }
             
-            // 关闭按钮关闭 - 添加事件委托确保能捕获到事件
+            // 关闭按钮/确认按钮/空白处/ESC键关闭公告弹窗
             document.addEventListener('click', function(e) {
-                if (e.target.id === 'close-update' || e.target.parentElement.id === 'close-update') {
-                    console.log('点击关闭按钮');
+                if (e.target.id === 'close-update' || e.target.parentElement.id === 'close-update' || e.target.id === 'confirm-update') {
                     closeUpdateModal();
                 }
+                if (e.target === updateModal) closeUpdateModal();
             });
-            
-            // 确认按钮关闭 - 添加事件委托
-            document.addEventListener('click', function(e) {
-                if (e.target.id === 'confirm-update') {
-                    console.log('点击确认按钮');
-                    closeUpdateModal();
-                }
-            });
-            
-            // 点击空白处关闭
-            updateModal.addEventListener('click', function(e) {
-                // 检查点击的是否是模态框背景而非内容
-                if (e.target === updateModal) {
-                    console.log('点击空白区域');
-                    closeUpdateModal();
-                }
-            });
-            
-            // ESC键关闭 - 全局监听
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    console.log('按下ESC键');
-                    // 检查弹窗是否可见
-                    if (!updateModal.classList.contains('hidden') || updateModal.style.display !== 'none') {
-                        closeUpdateModal();
-                    }
-                    if (messageModal.style.display !== 'none') {
-                        hideModal();
-                    }
+                    closeUpdateModal();
+                    if (messageModal.style.display !== 'none') hideModal();
+                    if (segmentModal.style.display !== 'none') hideSegmentModal();
                 }
             });
             
             // 强制设置消息弹窗初始状态
             const messageModal = document.getElementById('message-modal');
             messageModal.style.display = 'none';
+            // 初始化分段弹窗相关元素
+            const segmentModal = document.getElementById('segment-modal');
+            const segmentCount = document.getElementById('segment-count');
+            const segmentRemainder = document.getElementById('segment-remainder');
+            const segmentConfirm = document.getElementById('segment-confirm');
+            const segmentCancel = document.getElementById('segment-cancel');
+            // 全局变量存储当前余数（用于分段填充）
+            let currentRemainder = 0;
             
-            // 定义余数区域地胶颜色
-            const REMAINDER_MAT_COLOR = '#D0823D'; // 余数区域和手动添加的地胶使用这个颜色
-            
-            // 操作历史记录 - 用于撤销功能
+            // 余数区域地胶颜色
+            const REMAINDER_MAT_COLOR = '#D0823D';
+            // 操作历史记录
             const history = [];
-            const MAX_HISTORY = 50; // 大幅增加历史记录容量
-            
-            // 解决浮点数精度问题的辅助函数
+            const MAX_HISTORY = 50;
+            // 浮点数精度修复
             function precisionFix(num, decimals = 2) {
                 return Number(num.toFixed(decimals));
             }
-            
-            // 保存当前状态到历史记录
+
+            // 保存状态/撤销/更新撤销按钮
             function saveState() {
-                // 创建当前状态的深拷贝
-                const state = {
-                    mats: JSON.parse(JSON.stringify(mats)),
-                    fieldLength: fieldLength,
-                    fieldWidth: fieldWidth,
-                    scale: scale,
-                    FIELD_X: FIELD_X,
-                    FIELD_Y: FIELD_Y
-                };
-                
-                // 添加到历史记录
+                const state = { mats: JSON.parse(JSON.stringify(mats)), fieldLength, fieldWidth, scale, FIELD_X, FIELD_Y };
                 history.push(state);
-                
-                // 限制历史记录数量
-                if (history.length > MAX_HISTORY) {
-                    history.shift(); // 移除最旧的记录
-                }
-                
-                // 更新撤销按钮状态
+                if (history.length > MAX_HISTORY) history.shift();
                 updateUndoButtonState();
             }
-            
-            // 撤销上一步操作
             function undo() {
-                if (history.length === 0) {
-                    showModal("没有可撤销的操作", true);
-                    return;
-                }
-                
-                // 恢复上一个状态
+                if (history.length === 0) { showModal("没有可撤销的操作", true); return; }
                 const prevState = history.pop();
                 mats = JSON.parse(JSON.stringify(prevState.mats));
-                fieldLength = prevState.fieldLength;
-                fieldWidth = prevState.fieldWidth;
-                scale = prevState.scale;
-                FIELD_X = prevState.FIELD_X;
-                FIELD_Y = prevState.FIELD_Y;
-                
-                // 更新UI
-                updateMatConfig();
-                updateSmartAddButtonState();
-                updateUndoButtonState();
-                resizeCanvas();
-                drawCanvas();
-                
-                // 更新按钮状态
+                fieldLength = prevState.fieldLength; fieldWidth = prevState.fieldWidth;
+                scale = prevState.scale; FIELD_X = prevState.FIELD_X; FIELD_Y = prevState.FIELD_Y;
+                updateMatConfig(); updateSmartAddButtonState(); updateUndoButtonState();
+                resizeCanvas(); drawCanvas();
                 document.getElementById('reset-btn').disabled = mats.length === 0;
                 document.getElementById('copy-btn').disabled = mats.length === 0;
                 document.getElementById('empty-canvas-message').style.display = mats.length === 0 ? 'flex' : 'none';
             }
-            
-            // 更新撤销按钮状态
             function updateUndoButtonState() {
                 const undoBtn = document.getElementById('undo-btn');
                 undoBtn.disabled = history.length === 0;
-                
-                // 添加视觉反馈
-                if (history.length === 0) {
-                    undoBtn.classList.remove('bg-gray-300');
-                    undoBtn.classList.add('bg-gray-200');
-                } else {
-                    undoBtn.classList.remove('bg-gray-200');
-                    undoBtn.classList.add('bg-gray-300');
-                }
+                undoBtn.classList.toggle('bg-gray-200', history.length === 0);
+                undoBtn.classList.toggle('bg-gray-300', history.length > 0);
             }
-            
-            // 复制拼装图到剪贴板
+
+            // 复制拼装图
             function copyToClipboard() {
                 const copyBtn = document.getElementById('copy-btn');
                 const originalText = copyBtn.innerHTML;
-                
-                // 获取Canvas数据URL
                 canvas.toBlob(blob => {
                     try {
-                        // 使用Clipboard API复制图片
-                        navigator.clipboard.write([
-                            new ClipboardItem({
-                                'image/png': blob
-                            })
-                        ]).then(() => {
-                            // 显示复制成功状态
+                        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => {
                             copyBtn.innerHTML = '<i class="fa fa-check mr-2"></i>已复制';
                             copyBtn.classList.add('btn-copied');
-                            
-                            // 2秒后恢复原始状态
-                            setTimeout(() => {
-                                copyBtn.innerHTML = originalText;
-                                copyBtn.classList.remove('btn-copied');
-                            }, 2000);
-                            
+                            setTimeout(() => { copyBtn.innerHTML = originalText; copyBtn.classList.remove('btn-copied'); }, 2000);
                             showModal("拼装图已成功复制到剪贴板，可直接粘贴使用");
-                        }).catch(err => {
-                            console.error('复制失败:', err);
-                            showModal("复制失败，请尝试刷新页面后重试", true);
-                        });
+                        }).catch(err => { console.error('复制失败:', err); showModal("复制失败，请尝试刷新页面后重试", true); });
                     } catch (err) {
-                        console.error('浏览器不支持剪贴板API:', err);
-                        // 降级方案：创建图片链接供手动复制
                         const imgUrl = canvas.toDataURL('image/png');
                         const tempLink = document.createElement('a');
-                        tempLink.href = imgUrl;
-                        tempLink.download = '地胶拼装图.png';
-                        document.body.appendChild(tempLink);
-                        tempLink.click();
-                        document.body.removeChild(tempLink);
+                        tempLink.href = imgUrl; tempLink.download = '地胶拼装图.png';
+                        document.body.appendChild(tempLink); tempLink.click(); document.body.removeChild(tempLink);
                         showModal("您的浏览器不支持直接复制图片，已为您下载图片文件", true);
                     }
                 });
             }
-            
-            // 画布尺寸
+
+            // 画布基础参数
             let CANVAS_WIDTH = 1200;
             let CANVAS_HEIGHT = 600;
-            
-            // 场地边距
-            const MARGIN = 20; 
-            
-            // 吸附阈值（像素）
+            const MARGIN = 20;
             const SNAP_THRESHOLD = 15;
-            
-            // 场地和地胶参数
             let fieldLength = 0;
             let fieldWidth = 0;
-            let scale = 40; // 初始缩放比例
-            
-            // 地胶文字大小
+            let scale = 40;
             let matFontSize = 16;
-            
-            // 画布和绘图上下文
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
-            
-            // 场地边界位置
             let FIELD_X = MARGIN;
             let FIELD_Y = MARGIN;
-            
-            // 地胶块数组
             let mats = [];
-            
-            // 拖拽相关变量
+
+            // 拖拽/Shift键/弹窗相关变量
             let isDragging = false;
             let draggedMatIndex = -1;
             let offsetX, offsetY;
-            let startMatState = null; // 记录拖拽开始时地胶的状态
-            let isStateSaved = false; // 标记是否已保存状态
-            
-            // Shift键状态
+            let startMatState = null;
+            let isStateSaved = false;
             let isShiftKeyDown = false;
-            
-            // 对话框元素
             const modalMessage = document.getElementById('modal-message');
             const modalIcon = document.getElementById('modal-icon');
             const modalOk = document.getElementById('modal-ok');
-            
+
             // 初始化事件监听
             function initEvents() {
-                // 撤销按钮事件
+                // 按钮事件
                 document.getElementById('undo-btn').addEventListener('click', undo);
-                
-                // 生成按钮事件
-                document.getElementById('generate-btn').addEventListener('click', function() {
-                    // 生成前保存当前状态
-                    saveState();
-                    generateMats();
-                });
-                
-                // 重置按钮事件
-                document.getElementById('reset-btn').addEventListener('click', function() {
-                    // 重置前保存当前状态
-                    saveState();
-                    reset();
-                });
-                
-                // 复制按钮事件
+                document.getElementById('generate-btn').addEventListener('click', () => { saveState(); generateMats(); });
+                document.getElementById('reset-btn').addEventListener('click', () => { saveState(); reset(); });
                 document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
-                
-                // 智能添加地胶按钮事件
-                document.getElementById('smart-add-btn').addEventListener('click', function() {
-                    // 添加前保存当前状态
-                    saveState();
-                    smartAddMats();
-                });
-                
-                // 对话框确定按钮事件
+                document.getElementById('smart-add-btn').addEventListener('click', () => { saveState(); smartAddMats(); });
                 modalOk.addEventListener('click', hideModal);
-                
-                // 点击对话框背景关闭
-                messageModal.addEventListener('click', function(e) {
-                    if (e.target === messageModal) {
-                        hideModal();
-                    }
-                });
-                
-                // 鼠标按下事件
+                messageModal.addEventListener('click', (e) => { if (e.target === messageModal) hideModal(); });
+                // 分段弹窗事件
+                segmentConfirm.addEventListener('click', confirmSegmentFill);
+                segmentCancel.addEventListener('click', hideSegmentModal);
+                segmentModal.addEventListener('click', (e) => { if (e.target === segmentModal) hideSegmentModal(); });
+
+                // 画布鼠标事件
                 canvas.addEventListener('mousedown', handleMouseDown);
-                
-                // 鼠标移动事件
                 canvas.addEventListener('mousemove', handleMouseMove);
-                
-                // 鼠标释放事件
                 canvas.addEventListener('mouseup', handleMouseUp);
-                
-                // 鼠标离开画布事件
                 canvas.addEventListener('mouseleave', handleMouseUp);
-                
-                // 右键菜单事件
-                canvas.addEventListener('contextmenu', function(e) {
-                    e.preventDefault();
-                    if (draggedMatIndex >= 0) {
-                        // 旋转前保存当前状态
-                        saveState();
-                        rotateMat(draggedMatIndex);
-                    }
-                });
-                
-                // 输入框变化事件
+                canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); if (draggedMatIndex >= 0) { saveState(); rotateMat(draggedMatIndex); } });
+
+                // 输入框/单选框事件
                 document.getElementById('field-length').addEventListener('input', updateFieldDimensions);
                 document.getElementById('field-width').addEventListener('input', updateFieldDimensions);
-                
-                // 标准地胶宽度变化时，控制智能添加按钮状态
-                document.querySelectorAll('input[name="standard-mat-width"]').forEach(radio => {
-                    radio.addEventListener('change', function() {
-                        updateSmartAddButtonState();
-                    });
-                });
-                
-                // 添加自定义地胶按钮事件
-                document.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('add-mat-btn')) {
-                        // 添加前保存当前状态
-                        saveState();
-                        addCustomMat();
-                    }
-                });
-                
-                // 窗口大小变化事件
+                document.querySelectorAll('input[name="standard-mat-width"]').forEach(radio => radio.addEventListener('change', updateSmartAddButtonState));
+                document.addEventListener('click', (e) => { if (e.target.classList.contains('add-mat-btn')) { saveState(); addCustomMat(); } });
+
+                // 窗口大小/Shift键/文字大小调整
                 window.addEventListener('resize', resizeCanvas);
-                
-                // 键盘事件 - 监听Shift键状态
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Shift') {
-                        isShiftKeyDown = true;
-                    }
-                });
-                
-                document.addEventListener('keyup', function(e) {
-                    if (e.key === 'Shift') {
-                        isShiftKeyDown = false;
-                    }
-                });
-                
-                // 地胶文字大小调整事件
+                document.addEventListener('keydown', (e) => { if (e.key === 'Shift') isShiftKeyDown = true; });
+                document.addEventListener('keyup', (e) => { if (e.key === 'Shift') isShiftKeyDown = false; });
                 const fontSizeSlider = document.getElementById('font-size-slider');
                 const decreaseBtn = document.getElementById('decrease-font-size');
                 const increaseBtn = document.getElementById('increase-font-size');
                 const fontSizeValue = document.getElementById('font-size-value');
-                
-                fontSizeSlider.addEventListener('input', function() {
-                    // 调整前保存当前状态
-                    saveState();
-                    matFontSize = parseInt(this.value);
-                    fontSizeValue.textContent = `${matFontSize}px`;
-                    drawCanvas();
-                });
-                
-                decreaseBtn.addEventListener('click', function() {
-                    if (matFontSize > 8) {
-                        // 调整前保存当前状态
-                        saveState();
-                        matFontSize -= 1;
-                        fontSizeSlider.value = matFontSize;
-                        fontSizeValue.textContent = `${matFontSize}px`;
-                        drawCanvas();
-                    }
-                });
-                
-                increaseBtn.addEventListener('click', function() {
-                    // 调整前保存当前状态
-                    saveState();
-                    matFontSize += 1;
-                    fontSizeSlider.value = matFontSize;
-                    fontSizeValue.textContent = `${matFontSize}px`;
-                    drawCanvas();
-                });
+                fontSizeSlider.addEventListener('input', () => { saveState(); matFontSize = parseInt(this.value); fontSizeValue.textContent = `${matFontSize}px`; drawCanvas(); });
+                decreaseBtn.addEventListener('click', () => { if (matFontSize > 8) { saveState(); matFontSize -= 1; fontSizeSlider.value = matFontSize; fontSizeValue.textContent = `${matFontSize}px`; drawCanvas(); } });
+                increaseBtn.addEventListener('click', () => { saveState(); matFontSize += 1; fontSizeSlider.value = matFontSize; fontSizeValue.textContent = `${matFontSize}px`; drawCanvas(); });
             }
-            
+
             // 更新智能添加按钮状态
             function updateSmartAddButtonState() {
                 const standardMatWidth = getStandardMatWidth();
                 const smartAddBtn = document.getElementById('smart-add-btn');
-                const messageEl = document.getElementById('smart-add-message');
-                
-                if (standardMatWidth !== 1.8) {
-                    smartAddBtn.disabled = true;
-                } else if (mats.length === 0) {
-                    smartAddBtn.disabled = true;
-                } else {
-                    smartAddBtn.disabled = false;
-                }
+                smartAddBtn.disabled = standardMatWidth !== 1.8 || mats.length === 0;
             }
-            
-            // 显示对话框
+
+            // 通用弹窗显示/隐藏
             function showModal(message, isWarning = false) {
-                // 只有当消息有效时才显示弹窗
                 if (!message || message.trim() === '') return;
-                
                 modalMessage.textContent = message;
                 modalIcon.className = isWarning ? "fa fa-exclamation-triangle text-3xl text-orange-500 mb-2" : "fa fa-info-circle text-3xl text-primary mb-2";
                 messageModal.style.display = 'flex';
-                // 阻止背景滚动
                 document.body.style.overflow = 'hidden';
             }
-            
-            // 隐藏对话框
             function hideModal() {
                 messageModal.style.display = 'none';
-                // 恢复背景滚动
                 document.body.style.overflow = '';
             }
-            
-            // 调整画布大小
+
+            // 新增：分段填充弹窗显示/隐藏
+            function showSegmentModal(remainder) {
+                currentRemainder = remainder;
+                segmentRemainder.textContent = remainder.toFixed(2);
+                segmentCount.value = '';
+                segmentCount.focus();
+                segmentModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+            function hideSegmentModal() {
+                segmentModal.style.display = 'none';
+                document.body.style.overflow = '';
+                currentRemainder = 0;
+            }
+
+            // 新增：分段填充确认逻辑
+            function confirmSegmentFill() {
+                const count = parseInt(segmentCount.value);
+                // 校验输入：必须是正整数
+                if (isNaN(count) || count < 1 || !Number.isInteger(count)) {
+                    showModal("请输入有效的正整数段数（例如：4、5、6）", true);
+                    return;
+                }
+                // 计算单条地胶长度：场地长 / 输入段数
+                const singleLength = precisionFix(fieldLength / count);
+                // 执行填充
+                addSmartMats(count, currentRemainder, singleLength);
+                // 提示信息
+                const messageEl = document.getElementById('smart-add-message');
+                const originalText = messageEl.textContent;
+                messageEl.textContent = `已自动生成${count}条 ${currentRemainder.toFixed(2)}米×${singleLength.toFixed(2)}米的地胶`;
+                messageEl.classList.remove('text-orange-500', 'text-blue-500');
+                messageEl.classList.add('text-green-500');
+                setTimeout(() => {
+                    messageEl.textContent = originalText;
+                    messageEl.classList.remove('text-green-500');
+                    messageEl.classList.add('text-orange-500');
+                }, 5000);
+                // 隐藏分段弹窗
+                hideSegmentModal();
+            }
+
+            // 画布大小调整/场地尺寸更新/缩放比例计算
             function resizeCanvas() {
                 const container = document.getElementById('canvas-container');
                 CANVAS_WIDTH = container.clientWidth;
-                
-                // 根据场地尺寸计算画布高度
                 if (fieldLength > 0 && fieldWidth > 0) {
                     calculateScale();
-                    CANVAS_HEIGHT = fieldWidth * scale + 2 * MARGIN + 100; // 额外增加100像素的空间
+                    CANVAS_HEIGHT = fieldWidth * scale + 2 * MARGIN + 100;
                 } else {
-                    CANVAS_HEIGHT = 400; // 默认高度
+                    CANVAS_HEIGHT = 400;
                 }
-                
-                // 设置Canvas的实际尺寸
                 canvas.width = CANVAS_WIDTH;
                 canvas.height = CANVAS_HEIGHT;
-                
-                // 如果已有地胶，重新计算缩放比例并重绘
-                if (fieldLength > 0 && fieldWidth > 0) {
-                    drawCanvas();
-                }
+                if (fieldLength > 0 && fieldWidth > 0) drawCanvas();
             }
-            
-            // 更新场地尺寸显示
             function updateFieldDimensions() {
                 const length = document.getElementById('field-length').value;
                 const width = document.getElementById('field-width').value;
-                
-                if (length && width) {
-                    const fieldDimensionsEl = document.getElementById('field-dimensions');
-                    if (fieldDimensionsEl) {
-                        fieldDimensionsEl.textContent = 
-                            `${parseFloat(width).toFixed(1)}米 × ${parseFloat(length).toFixed(1)}米`;
-                    }
-                } else {
-                    const fieldDimensionsEl = document.getElementById('field-dimensions');
-                    if (fieldDimensionsEl) {
-                        fieldDimensionsEl.textContent = "未设置";
-                    }
+                const fieldDimensionsEl = document.getElementById('field-dimensions');
+                if (fieldDimensionsEl) {
+                    fieldDimensionsEl.textContent = length && width ? `${parseFloat(width).toFixed(1)}米 × ${parseFloat(length).toFixed(1)}米` : "未设置";
                 }
             }
-            
-            // 计算合适的缩放比例
             function calculateScale() {
                 const availableWidth = CANVAS_WIDTH - 2 * MARGIN;
-                
-                // 计算水平方向的缩放比例
                 scale = availableWidth / fieldLength;
-                
-                // 调整场地位置，使其垂直居中
                 FIELD_X = MARGIN;
                 FIELD_Y = (CANVAS_HEIGHT - fieldWidth * scale) / 2;
             }
-            
-            // 获取当前选中的标准地胶宽度
+
+            // 获取标准地胶宽度/添加自定义地胶
             function getStandardMatWidth() {
-                const selectedRadio = document.querySelector('input[name="standard-mat-width"]:checked');
-                return parseFloat(selectedRadio.value);
+                return parseFloat(document.querySelector('input[name="standard-mat-width"]:checked').value);
             }
-            
-            // 添加自定义地胶
             function addCustomMat() {
                 const widthInputs = document.querySelectorAll('.custom-mat-width');
                 const lengthInputs = document.querySelectorAll('.custom-mat-length');
-                
                 const customMats = [];
-                
                 widthInputs.forEach((widthInput, index) => {
                     const width = parseFloat(widthInput.value);
                     const length = parseFloat(lengthInputs[index].value);
-                    
-                    if (!isNaN(width) && !isNaN(length) && width > 0 && length > 0) {
-                        customMats.push({
-                            width: width,
-                            height: length
-                        });
-                    }
+                    if (!isNaN(width) && !isNaN(length) && width > 0 && length > 0) customMats.push({ width, height: length });
                 });
-                
                 if (customMats.length === 0) {
-                    // 修改提示信息显示方式，不隐藏原有提示
                     const messageEl = document.getElementById('smart-add-message');
                     const originalText = messageEl.textContent;
                     messageEl.textContent = "请输入有效的自定义地胶尺寸！";
-                    messageEl.classList.remove('text-orange-500');
-                    messageEl.classList.add('text-red-500');
-                    
-                    // 3秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-red-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 3000);
+                    messageEl.classList.remove('text-orange-500'); messageEl.classList.add('text-red-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-red-500'); messageEl.classList.add('text-orange-500'); }, 3000);
                     return;
                 }
-                
                 calculateScale();
-                
-                // 计算已有地胶占用的高度
                 let currentY = FIELD_Y;
-                if (mats.length > 0) {
-                    const lastMat = mats[mats.length - 1];
-                    currentY = lastMat.y + lastMat.width * scale + 5;
-                }
-                
+                if (mats.length > 0) currentY = mats[mats.length - 1].y + mats[mats.length - 1].width * scale + 5;
                 customMats.forEach((mat) => {
-                    // 手动添加的地胶使用余数区域颜色
-                    mats.push({
-                        x: FIELD_X,
-                        y: currentY,
-                        width: mat.width,
-                        height: mat.height,
-                        color: REMAINDER_MAT_COLOR,
-                        rotation: 0,
-                        isStandard: false
-                    });
-                    
+                    mats.push({ x: FIELD_X, y: currentY, width: mat.width, height: mat.height, color: REMAINDER_MAT_COLOR, rotation: 0, isStandard: false });
                     currentY += mat.width * scale + 5;
                 });
-                
-                // 调整画布高度以适应所有地胶
                 resizeCanvas();
-                
                 updateMatConfig();
                 document.getElementById('reset-btn').disabled = false;
                 document.getElementById('copy-btn').disabled = false;
                 updateSmartAddButtonState();
                 drawCanvas();
             }
-            
-            // 智能添加地胶 - 完整恢复所有余数区间处理逻辑
+
+            // 核心：智能添加地胶（最终版余数逻辑）
             function smartAddMats() {
-                // 检查是否为1.8米宽幅
                 const standardMatWidth = getStandardMatWidth();
-                if (standardMatWidth !== 1.8) {
-                    showModal("智能添加只支持1.8米宽幅");
-                    return;
-                }
-                
+                if (standardMatWidth !== 1.8) { showModal("智能添加只支持1.8米宽幅"); return; }
                 if (fieldLength <= 0 || fieldWidth <= 0) {
-                    // 修改提示信息显示方式，不隐藏原有提示
                     const messageEl = document.getElementById('smart-add-message');
                     const originalText = messageEl.textContent;
                     messageEl.textContent = "请先设置场地尺寸并生成地胶！";
-                    messageEl.classList.remove('text-orange-500');
-                    messageEl.classList.add('text-red-500');
-                    
-                    // 3秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-red-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 3000);
+                    messageEl.classList.remove('text-orange-500'); messageEl.classList.add('text-red-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-red-500'); messageEl.classList.add('text-orange-500'); }, 3000);
                     return;
                 }
-                
-                // 获取标准地胶宽度和余数，修复浮点数精度问题
+
+                // 计算余数并修复精度
                 const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
-                let remainderWidth = fieldWidth - standardMatCount * standardMatWidth;
-                remainderWidth = precisionFix(remainderWidth); // 关键修复：精确到两位小数
-                
-                // 修改提示信息显示方式，不隐藏原有提示
+                let remainderWidth = precisionFix(fieldWidth - standardMatCount * standardMatWidth);
                 const messageEl = document.getElementById('smart-add-message');
                 const originalText = messageEl.textContent;
                 messageEl.textContent = `检测到余数宽度: ${remainderWidth.toFixed(2)}米`;
-                messageEl.classList.remove('text-orange-500');
-                messageEl.classList.add('text-blue-500');
-                
-                // 严格按照规则判断余数范围
+                messageEl.classList.remove('text-orange-500'); messageEl.classList.add('text-blue-500');
+
+                // 余数区间判断（最终版：移除<0.4提示，替换为自定义分段）
                 if (remainderWidth < 0.4) {
-                    // 余数 < 0.4米时：显示提示，不自动填充
-                    showModal("这个你手动输入，不知道你要除几份", true);
-                    
-                    // 显示提示信息
-                    messageEl.textContent = "这个你手动输入，不知道你要除几份";
-                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
-                    messageEl.classList.add('text-red-500');
-                    
-                    // 5秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-red-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 5000);
-                } 
-                else if (remainderWidth === 0.4) {
-                    // 余数等于0.4米时，生成4条：余数米宽 * 场地总长/4米长
+                    // 显示自定义分段弹窗，移除原有提示
+                    showSegmentModal(remainderWidth);
+                } else if (remainderWidth === 0.4) {
                     const matLength = precisionFix(fieldLength / 4);
                     addSmartMats(4, remainderWidth, matLength);
-                    
-                    // 显示成功信息
                     messageEl.textContent = `已自动生成4条 ${remainderWidth.toFixed(2)}米×${matLength.toFixed(2)}米的地胶`;
-                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
-                    messageEl.classList.add('text-green-500');
-                    
-                    // 5秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-green-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 5000);
-                }
-                else if (remainderWidth > 0.4 && remainderWidth < 0.6) {
-                    // 0.4米 < 余数 < 0.6米时，生成3条：余数米宽 * 场地总长/3米长
+                    messageEl.classList.remove('text-blue-500'); messageEl.classList.add('text-green-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-green-500'); messageEl.classList.add('text-orange-500'); }, 5000);
+                } else if (remainderWidth > 0.4 && remainderWidth < 0.6) {
                     const matLength = precisionFix(fieldLength / 3);
                     addSmartMats(3, remainderWidth, matLength);
-                    
-                    // 显示成功信息
                     messageEl.textContent = `已自动生成3条 ${remainderWidth.toFixed(2)}米×${matLength.toFixed(2)}米的地胶`;
-                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
-                    messageEl.classList.add('text-green-500');
-                    
-                    // 5秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-green-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 5000);
-                }
-                else if (remainderWidth === 0.6) {
-                    // 余数等于0.6米时，生成3条：余数米宽 * 场地总长/3米长
+                    messageEl.classList.remove('text-blue-500'); messageEl.classList.add('text-green-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-green-500'); messageEl.classList.add('text-orange-500'); }, 5000);
+                } else if (remainderWidth === 0.6) {
                     const matLength = precisionFix(fieldLength / 3);
                     addSmartMats(3, remainderWidth, matLength);
-                    
-                    // 显示成功信息
                     messageEl.textContent = `已自动生成3条 ${remainderWidth.toFixed(2)}米×${matLength.toFixed(2)}米的地胶`;
-                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
-                    messageEl.classList.add('text-green-500');
-                    
-                    // 5秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-green-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 5000);
-                }
-                else if (remainderWidth > 0.6 && remainderWidth <= 0.9) {
-                    // 0.6米 < 余数 ≤ 0.9米时，生成2条：余数米宽 * 场地总长/2米长
+                    messageEl.classList.remove('text-blue-500'); messageEl.classList.add('text-green-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-green-500'); messageEl.classList.add('text-orange-500'); }, 5000);
+                } else if (remainderWidth > 0.6 && remainderWidth <= 0.9) {
                     const matLength = precisionFix(fieldLength / 2);
                     addSmartMats(2, remainderWidth, matLength);
-                    
-                    // 显示成功信息
                     messageEl.textContent = `已自动生成2条 ${remainderWidth.toFixed(2)}米×${matLength.toFixed(2)}米的地胶`;
-                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
-                    messageEl.classList.add('text-green-500');
-                    
-                    // 5秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-green-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 5000);
-                } 
-                else if (remainderWidth > 0.9 && remainderWidth <= 1.2) {
-                    // 0.9米 < 余数 ≤ 1.2米时：显示提示，不自动填充
-                    showModal("这个你手动输入，我不会除三乘二", true);
-                    
-                    // 显示提示信息
-                    messageEl.textContent = "这个你手动输入，我不会除三乘二";
-                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
-                    messageEl.classList.add('text-red-500');
-                    
-                    // 5秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-red-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 5000);
-                } 
-                else {
-                    // 余数 > 1.2米时：生成1条「余数米宽 × 场地总长度米长」的地胶
-                    addSmartMats(1, remainderWidth, fieldLength);
-                    
-                    // 显示成功信息
-                    messageEl.textContent = `已自动生成1条 ${remainderWidth.toFixed(2)}米×${fieldLength.toFixed(2)}米的地胶`;
-                    messageEl.classList.remove('text-orange-500', 'text-blue-500');
-                    messageEl.classList.add('text-green-500');
-                    
-                    // 5秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-green-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 5000);
+                    messageEl.classList.remove('text-blue-500'); messageEl.classList.add('text-green-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-green-500'); messageEl.classList.add('text-orange-500'); }, 5000);
+                } else if (remainderWidth > 0.9 && remainderWidth <= 1.2) {
+                    // 0.9<余数≤1.2：左1条(余数宽×场地长/3*2) + 右2条(余数宽/2×场地长/3) 组合填充
+                    const leftLength = precisionFix(fieldLength / 3 * 2);
+                    const rightWidth = precisionFix(remainderWidth / 2);
+                    const rightLength = precisionFix(leftLength / 2);
+                    addSmartMatsNew(remainderWidth, leftLength, rightWidth, rightLength);
+                    messageEl.textContent = `已自动填充：左侧1条${remainderWidth.toFixed(2)}×${leftLength.toFixed(2)}米，右侧2条${rightWidth.toFixed(2)}×${rightLength.toFixed(2)}米（上下排列）`;
+                    messageEl.classList.remove('text-blue-500'); messageEl.classList.add('text-green-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-green-500'); messageEl.classList.add('text-orange-500'); }, 5000);
+                } else {
+                    // 余数>1.2：直接生成1条 余数宽 × 场地总长 的地胶
+                    addSmartMatsSingle(remainderWidth, fieldLength);
+                    messageEl.textContent = `已自动生成1条 ${remainderWidth.toFixed(2)}米×${fieldLength.toFixed(2)}米的地胶（余数宽×场地总长）`;
+                    messageEl.classList.remove('text-blue-500'); messageEl.classList.add('text-green-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-green-500'); messageEl.classList.add('text-orange-500'); }, 5000);
                 }
             }
-            
-            // 添加智能生成的地胶并自动补到需要补的位置上
-            function addSmartMats(count, width, length) {
+
+            // 余数>1.2专用：生成单条 余数宽×场地总长 的地胶
+            function addSmartMatsSingle(width, height) {
                 calculateScale();
-                
-                // 找到余数区域的起始Y坐标 - 这是需要补充地胶的位置
                 const standardMatWidth = getStandardMatWidth();
                 const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
                 const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
-                
-                // 清除已有的智能生成地胶，避免重复添加
+                // 清除原有智能地胶
                 mats = mats.filter(mat => !mat.isSmart);
-                
-                // 生成指定数量的地胶并精确放置在余数区域
-                for (let i = 0; i < count; i++) {
-                    // 智能生成的地胶使用余数区域颜色
-                    const color = REMAINDER_MAT_COLOR;
-                    
-                    // 计算X坐标，使地胶横向排列，完全覆盖余数区域
-                    const x = FIELD_X + i * length * scale;
-                    
-                    mats.push({
-                        x: x,
-                        y: remainderY,
-                        width: width,
-                        height: length,
-                        color: color,
-                        rotation: 0,
-                        isStandard: false,
-                        isSmart: true // 标记为智能生成的地胶
-                    });
-                }
-                
-                // 调整画布高度以适应所有地胶
+                const color = REMAINDER_MAT_COLOR;
+                // 添加单条地胶
+                mats.push({
+                    x: FIELD_X,
+                    y: remainderY,
+                    width: width,
+                    height: height,
+                    color: color,
+                    rotation: 0,
+                    isStandard: false,
+                    isSmart: true
+                });
+                // 调整画布并更新
                 resizeCanvas();
-                
                 updateMatConfig();
                 document.getElementById('reset-btn').disabled = false;
                 document.getElementById('copy-btn').disabled = false;
                 drawCanvas();
             }
-            
-            // 更新地胶配置显示
+
+            // 0.9<余数≤1.2专用：左1条+右2条 组合填充
+            function addSmartMatsNew(remainderWidth, leftLength, rightWidth, rightLength) {
+                calculateScale();
+                const standardMatWidth = getStandardMatWidth();
+                const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
+                const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
+                // 清除原有智能地胶
+                mats = mats.filter(mat => !mat.isSmart);
+                const color = REMAINDER_MAT_COLOR;
+
+                // 1. 左侧：1条 余数宽 * 左侧长度（场地长/3*2）
+                mats.push({
+                    x: FIELD_X,
+                    y: remainderY,
+                    width: remainderWidth,
+                    height: leftLength,
+                    color: color,
+                    rotation: 0,
+                    isStandard: false,
+                    isSmart: true
+                });
+
+                // 2. 右侧：2条 余数/2宽 * 左侧长度/2长（上下排列）
+                const rightStartX = FIELD_X + leftLength * scale; // 右侧起始X：左侧地胶结束位置
+                // 上侧小地胶
+                mats.push({
+                    x: rightStartX,
+                    y: remainderY,
+                    width: rightWidth,
+                    height: rightLength,
+                    color: color,
+                    rotation: 0,
+                    isStandard: false,
+                    isSmart: true
+                });
+                // 下侧小地胶（Y轴偏移：上侧地胶宽度）
+                mats.push({
+                    x: rightStartX,
+                    y: remainderY + rightWidth * scale,
+                    width: rightWidth,
+                    height: rightLength,
+                    color: color,
+                    rotation: 0,
+                    isStandard: false,
+                    isSmart: true
+                });
+
+                // 调整画布并更新
+                resizeCanvas();
+                updateMatConfig();
+                document.getElementById('reset-btn').disabled = false;
+                document.getElementById('copy-btn').disabled = false;
+                drawCanvas();
+            }
+
+            // 通用智能添加：生成N条等长地胶（适配0.4~0.9米+自定义分段）
+            function addSmartMats(count, width, length) {
+                calculateScale();
+                const standardMatWidth = getStandardMatWidth();
+                const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
+                const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
+                mats = mats.filter(mat => !mat.isSmart);
+                const color = REMAINDER_MAT_COLOR;
+                for (let i = 0; i < count; i++) {
+                    const x = FIELD_X + i * length * scale;
+                    mats.push({ x, y: remainderY, width, height: length, color, rotation: 0, isStandard: false, isSmart: true });
+                }
+                resizeCanvas();
+                updateMatConfig();
+                document.getElementById('reset-btn').disabled = false;
+                document.getElementById('copy-btn').disabled = false;
+                drawCanvas();
+            }
+
+            // 更新地胶配置/生成地胶/重置
             function updateMatConfig() {
                 let totalWidth = 0;
-                mats.forEach(mat => {
-                    totalWidth += mat.width;
-                });
-                
-                const coverage = ((totalWidth / fieldWidth) * 100).toFixed(1);
-                
+                mats.forEach(mat => totalWidth += mat.width);
+                const coverage = fieldWidth > 0 ? ((totalWidth / fieldWidth) * 100).toFixed(1) : 0;
                 const matConfigEl = document.getElementById('mat-config');
-                if (matConfigEl) {
-                    matConfigEl.textContent = 
-                        `${mats.length}条地胶，总宽度 ${totalWidth.toFixed(2)}米 (覆盖场地 ${coverage}%)`;
-                }
+                if (matConfigEl) matConfigEl.textContent = `${mats.length}条地胶，总宽度 ${totalWidth.toFixed(2)}米 (覆盖场地 ${coverage}%)`;
             }
-            
-            // 生成地胶 - 移除成功提示框
             function generateMats() {
                 const lengthInput = document.getElementById('field-length').value;
                 const widthInput = document.getElementById('field-width').value;
-                
-                // 验证输入
-                if (!lengthInput || !widthInput) {
-                    showModal("请输入场地的长度和宽度", true);
-                    return;
-                }
-                
+                if (!lengthInput || !widthInput) { showModal("请输入场地的长度和宽度", true); return; }
                 fieldLength = parseFloat(lengthInput);
                 fieldWidth = parseFloat(widthInput);
-                
                 if (isNaN(fieldLength) || isNaN(fieldWidth) || fieldLength <= 0 || fieldWidth <= 0) {
-                    // 修改提示信息显示方式，不隐藏原有提示
                     const messageEl = document.getElementById('smart-add-message');
                     const originalText = messageEl.textContent;
                     messageEl.textContent = "请输入有效的正数尺寸！";
-                    messageEl.classList.remove('text-orange-500');
-                    messageEl.classList.add('text-red-500');
-                    
-                    // 3秒后恢复原始提示
-                    setTimeout(() => {
-                        messageEl.textContent = originalText;
-                        messageEl.classList.remove('text-red-500');
-                        messageEl.classList.add('text-orange-500');
-                    }, 3000);
+                    messageEl.classList.remove('text-orange-500'); messageEl.classList.add('text-red-500');
+                    setTimeout(() => { messageEl.textContent = originalText; messageEl.classList.remove('text-red-500'); messageEl.classList.add('text-orange-500'); }, 3000);
                     return;
                 }
-                
-                // 重置地胶数组
                 mats = [];
-                
-                // 重新计算画布尺寸和缩放比例
                 resizeCanvas();
                 calculateScale();
-                
-                // 获取标准地胶宽度
                 const standardMatWidth = getStandardMatWidth();
-                
-                // 计算标准地胶数量和余数
                 const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
-                
-                // 创建标准地胶 - 使用多色方案
                 for (let i = 0; i < standardMatCount; i++) {
                     const x = FIELD_X;
                     const y = FIELD_Y + i * standardMatWidth * scale;
-                    
-                    // 标准地胶使用多色方案
                     const hue = 195 + (i * 30) % 120;
                     const color = `hsl(${hue}, 70%, 50%)`;
-                    
-                    mats.push({
-                        x: x,
-                        y: y,
-                        width: standardMatWidth,
-                        height: fieldLength,
-                        color: color, // 标准地胶使用多色
-                        rotation: 0,
-                        isStandard: true
-                    });
+                    mats.push({ x, y, width: standardMatWidth, height: fieldLength, color, rotation: 0, isStandard: true });
                 }
-                
-                // 更新UI状态 - 移除成功提示框
                 updateMatConfig();
                 document.getElementById('reset-btn').disabled = false;
                 document.getElementById('copy-btn').disabled = false;
-                updateSmartAddButtonState(); // 更新智能添加按钮状态
+                updateSmartAddButtonState();
                 document.getElementById('empty-canvas-message').style.display = 'none';
                 drawCanvas();
             }
-            
-            // 重置
             function reset() {
                 mats = [];
                 document.getElementById('field-length').value = '';
                 document.getElementById('field-width').value = '';
-                
                 const fieldDimensionsEl = document.getElementById('field-dimensions');
-                if (fieldDimensionsEl) {
-                    fieldDimensionsEl.textContent = "未设置";
-                }
-                
+                if (fieldDimensionsEl) fieldDimensionsEl.textContent = "未设置";
                 const matConfigEl = document.getElementById('mat-config');
-                if (matConfigEl) {
-                    matConfigEl.textContent = "未生成";
-                }
-                
-                document.querySelectorAll('.custom-mat-width').forEach(input => {
-                    input.value = '';
-                });
-                document.querySelectorAll('.custom-mat-length').forEach(input => {
-                    input.value = '';
-                });
-                
+                if (matConfigEl) matConfigEl.textContent = "未生成";
+                document.querySelectorAll('.custom-mat-width').forEach(input => input.value = '');
+                document.querySelectorAll('.custom-mat-length').forEach(input => input.value = '');
                 document.getElementById('empty-canvas-message').style.display = 'flex';
-                document.getElementById('smart-add-btn').disabled = true; // 重置后禁用智能添加按钮
-                
-                // 重置提示信息为原始文本
+                document.getElementById('smart-add-btn').disabled = true;
                 const messageEl = document.getElementById('smart-add-message');
                 messageEl.textContent = "智能添加只支持1.8米宽幅地胶";
                 messageEl.classList.remove('text-red-500', 'text-green-500', 'text-blue-500');
                 messageEl.classList.add('text-orange-500');
-                
                 resizeCanvas();
                 drawCanvas();
                 document.getElementById('reset-btn').disabled = true;
                 document.getElementById('copy-btn').disabled = true;
             }
-            
-            // 删除选中的地胶
+
+            // 删除地胶/鼠标事件/旋转地胶
             function deleteSelectedMat(index) {
                 if (index >= 0) {
-                    // 删除前保存当前状态
                     saveState();
-                    
                     mats.splice(index, 1);
                     updateMatConfig();
-                    
                     if (mats.length === 0) {
                         document.getElementById('empty-canvas-message').style.display = 'flex';
                         document.getElementById('reset-btn').disabled = true;
@@ -1228,204 +901,142 @@
                     } else {
                         updateSmartAddButtonState();
                     }
-                    
                     resizeCanvas();
                     drawCanvas();
                 }
             }
-            
-            // 处理鼠标按下事件 - 用于拖拽
             function handleMouseDown(e) {
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
-                
                 for (let i = mats.length - 1; i >= 0; i--) {
                     const mat = mats[i];
-                    
                     const cos = Math.cos(mat.rotation);
                     const sin = Math.sin(mat.rotation);
-                    
                     const centerX = mat.x + mat.height * scale / 2;
                     const centerY = mat.y + mat.width * scale / 2;
                     const relX = mouseX - centerX;
                     const relY = mouseY - centerY;
-                    
                     const rotatedX = relX * cos + relY * sin;
                     const rotatedY = -relX * sin + relY * cos;
-                    
-                    if (Math.abs(rotatedX) <= mat.height * scale / 2 && 
-                        Math.abs(rotatedY) <= mat.width * scale / 2) {
-                        
+                    if (Math.abs(rotatedX) <= mat.height * scale / 2 && Math.abs(rotatedY) <= mat.width * scale / 2) {
                         if (isShiftKeyDown) {
                             deleteSelectedMat(i);
                         } else {
-                            // 保存当前地胶的状态，用于拖拽结束时判断是否需要记录历史
                             startMatState = JSON.parse(JSON.stringify(mat));
-                            isStateSaved = false; // 重置状态保存标记
-                            
+                            isStateSaved = false;
                             const selectedMat = mats.splice(i, 1)[0];
                             mats.push(selectedMat);
-                            
                             isDragging = true;
                             draggedMatIndex = mats.length - 1;
                             offsetX = mouseX - selectedMat.x;
                             offsetY = mouseY - selectedMat.y;
                         }
-                        
                         drawCanvas();
                         return;
                     }
                 }
             }
-            
-            // 处理鼠标移动事件 - 用于拖拽
             function handleMouseMove(e) {
                 if (!isDragging) return;
-                
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
-                
                 let newX = mouseX - offsetX;
                 let newY = mouseY - offsetY;
-                
                 const draggedMat = mats[draggedMatIndex];
-                
                 newX = Math.max(FIELD_X, Math.min(newX, FIELD_X + fieldLength * scale - draggedMat.height * scale));
                 newY = Math.max(FIELD_Y, Math.min(newY, FIELD_Y + fieldWidth * scale - draggedMat.width * scale));
-                
                 if (Math.abs(newX - FIELD_X) < SNAP_THRESHOLD) newX = FIELD_X;
-                if (Math.abs(newX - (FIELD_X + fieldLength * scale - draggedMat.height * scale)) < SNAP_THRESHOLD) 
-                    newX = FIELD_X + fieldLength * scale - draggedMat.height * scale;
+                if (Math.abs(newX - (FIELD_X + fieldLength * scale - draggedMat.height * scale)) < SNAP_THRESHOLD) newX = FIELD_X + fieldLength * scale - draggedMat.height * scale;
                 if (Math.abs(newY - FIELD_Y) < SNAP_THRESHOLD) newY = FIELD_Y;
-                if (Math.abs(newY - (FIELD_Y + fieldWidth * scale - draggedMat.width * scale)) < SNAP_THRESHOLD) 
-                    newY = FIELD_Y + fieldWidth * scale - draggedMat.width * scale;
-                
-                // 检查地胶是否有移动
+                if (Math.abs(newY - (FIELD_Y + fieldWidth * scale - draggedMat.width * scale)) < SNAP_THRESHOLD) newY = FIELD_Y + fieldWidth * scale - draggedMat.width * scale;
                 const hasMoved = Math.abs(draggedMat.x - newX) > 0.1 || Math.abs(draggedMat.y - newY) > 0.1;
-                
-                // 首次移动时保存状态
-                if (hasMoved && !isStateSaved) {
-                    saveState();
-                    isStateSaved = true;
-                }
-                
+                if (hasMoved && !isStateSaved) { saveState(); isStateSaved = true; }
                 draggedMat.x = newX;
                 draggedMat.y = newY;
-                
                 drawCanvas();
             }
-            
-            // 处理鼠标释放事件 - 用于拖拽结束
             function handleMouseUp() {
-                // 重置拖拽状态
                 isDragging = false;
                 draggedMatIndex = -1;
                 startMatState = null;
                 isStateSaved = false;
             }
-            
-            // 旋转地胶块
             function rotateMat(index) {
                 mats[index].rotation += Math.PI / 2;
                 drawCanvas();
             }
-            
-            // 绘制画布 - 确保背景为白色，修复文字显示层级
+
+            // 绘制画布
             function drawCanvas() {
-                // 填充白色背景，解决透明问题
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
                 if (fieldLength <= 0 || fieldWidth <= 0) return;
-                
                 // 绘制场地边界
                 ctx.strokeStyle = '#333';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(FIELD_X, FIELD_Y, fieldLength * scale, fieldWidth * scale);
-                
-                // 绘制场地标注
+                // 场地标注
                 ctx.fillStyle = '#333';
                 ctx.font = 'bold 18px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(`场地：${fieldWidth.toFixed(1)}米（宽） × ${fieldLength.toFixed(1)}米（长）`, 
-                             FIELD_X + fieldLength * scale / 2, FIELD_Y - 20);
-                
-                // 检查是否有智能生成的地胶（余数区域地胶）
-                const hasSmartMats = mats.some(mat => mat.isSmart);
-                
-                // 绘制余数区域背景（如果没有智能地胶覆盖）
+                ctx.fillText(`场地：${fieldWidth.toFixed(1)}米（宽） × ${fieldLength.toFixed(1)}米（长）`, FIELD_X + fieldLength * scale / 2, FIELD_Y - 20);
+                // 绘制余数区域背景
                 const standardMatWidth = getStandardMatWidth();
                 const standardMatCount = Math.floor(fieldWidth / standardMatWidth);
                 const remainderWidth = precisionFix(fieldWidth - standardMatCount * standardMatWidth);
-                
+                const hasSmartMats = mats.some(mat => mat.isSmart);
                 if (remainderWidth > 0 && !hasSmartMats) {
                     const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
-                    
                     ctx.fillStyle = 'rgba(255, 99, 71, 0.1)';
                     ctx.fillRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
-                    
                     ctx.strokeStyle = 'rgba(255, 99, 71, 0.5)';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(FIELD_X, remainderY, fieldLength * scale, remainderWidth * scale);
                 }
-                
-                // 绘制地胶块（在余数区域之上绘制）
+                // 绘制地胶
                 for (let i = 0; i < mats.length; i++) {
                     const mat = mats[i];
-                    
                     ctx.save();
                     ctx.translate(mat.x + mat.height * scale / 2, mat.y + mat.width * scale / 2);
                     ctx.rotate(mat.rotation);
-                    
                     ctx.fillStyle = mat.color;
                     ctx.fillRect(-mat.height * scale / 2, -mat.width * scale / 2, mat.height * scale, mat.width * scale);
-                    
                     ctx.strokeStyle = '#333';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(-mat.height * scale / 2, -mat.width * scale / 2, mat.height * scale, mat.width * scale);
-                    
-                    // 绘制尺寸标注
+                    // 地胶尺寸标注
                     ctx.font = `bold ${matFontSize}px Arial`;
                     ctx.fillStyle = '#333';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    
                     const isHorizontal = Math.abs(Math.sin(mat.rotation)) < 0.1 || Math.abs(Math.cos(mat.rotation)) < 0.1;
                     const widthText = isHorizontal ? mat.width.toFixed(2) : mat.height.toFixed(2);
                     const heightText = isHorizontal ? mat.height.toFixed(2) : mat.width.toFixed(2);
-                    const text = `${widthText}米*${heightText}米`;
-                    
-                    ctx.fillText(text, 0, 0);
-                    
+                    ctx.fillText(`${widthText}米*${heightText}米`, 0, 0);
                     ctx.restore();
                 }
-                
-                // 最后绘制余数区域文字，确保在地胶上方显示
+                // 余数区域文字
                 if (remainderWidth > 0 && !hasSmartMats) {
                     const remainderY = FIELD_Y + standardMatCount * standardMatWidth * scale;
                     ctx.fillStyle = 'rgba(255, 99, 71, 0.7)';
                     ctx.font = '14px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(`余数区域: ${remainderWidth.toFixed(2)}米`, 
-                                 FIELD_X + fieldLength * scale / 2, 
-                                 remainderY + remainderWidth * scale / 2);
+                    ctx.fillText(`余数区域: ${remainderWidth.toFixed(2)}米`, FIELD_X + fieldLength * scale / 2, remainderY + remainderWidth * scale / 2);
                 }
             }
-            
+
             // 初始化
             function init() {
                 resizeCanvas();
                 initEvents();
                 drawCanvas();
-                updateSmartAddButtonState(); // 初始化智能添加按钮状态
-                updateUndoButtonState(); // 初始化撤销按钮状态
+                updateSmartAddButtonState();
+                updateUndoButtonState();
             }
-            
-            // 启动初始化
             init();
         });
     </script>
